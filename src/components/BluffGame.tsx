@@ -72,7 +72,8 @@ export const BluffGame: React.FC<BluffGameProps> = ({
   }, []);
 
   const handlePlayClaim = () => {
-    if (selectedCards.length === 0) return;
+    // Strict Turn Lock
+    if (turn !== 0 || selectedCards.length === 0) return;
 
     soundManager.playHomeEntry();
     const thrownCards = playerHand.filter((c) => selectedCards.includes(c.id));

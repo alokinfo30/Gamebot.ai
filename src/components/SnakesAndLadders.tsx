@@ -116,6 +116,9 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
 
   const handleRollDice = useCallback(async () => {
     if (isRolling || isMovingRef.current || winner) return;
+    const activeP = players[currentTurnIdx];
+    // Strict Turn Lock: Human cannot roll dice when it is an AI player's turn
+    if (activeP && activeP.isBot && !isRolling) return;
 
     setIsRolling(true);
     soundManager.playDiceRoll();

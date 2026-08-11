@@ -444,6 +444,8 @@ export default function App() {
   // Roll Dice Logic
   const handleRollDice = useCallback(() => {
     if (gameState.hasRolled || gameState.status === 'finished') return;
+    // Strict Turn Lock: Only human whose turn it is can roll dice
+    if (currentTurnPlayer?.type !== 'human') return;
 
     soundManager.playDiceRoll();
     const dice = Math.floor(Math.random() * 6) + 1;
@@ -533,7 +535,8 @@ export default function App() {
   // Execute Token Move
   const handleExecuteMove = useCallback(
     (tokenId: number, dice: number) => {
-      if (!gameState.hasRolled && currentTurnPlayer?.type === 'human') return;
+      // Strict Turn & Roll-Before-Move Lock: Must be human turn and dice must be rolled
+      if (currentTurnPlayer?.type === 'human' && !gameState.hasRolled) return;
 
       const playerIndex = gameState.players.findIndex(
         (p) => p.color === gameState.currentTurnColor

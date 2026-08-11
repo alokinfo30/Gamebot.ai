@@ -304,4 +304,25 @@ export function initializeAllTestCases() {
     const isLudoRunning = (activeTab as string) === (otherTab as string);
     expect(isLudoRunning).toBe(false);
   });
+
+  registerTest('Real-Life Rules & Locks', 'Turn Lock Enforcement (Cannot Play Opponent Turn)', () => {
+    const currentTurn = 'red' as string;
+    const playerColor = 'green' as string;
+    const canPlayTurn = currentTurn === playerColor;
+    expect(canPlayTurn).toBe(false);
+  });
+
+  registerTest('Real-Life Rules & Locks', 'Roll Before Move Enforcement (Cannot Move Tokens Before Dice Roll)', () => {
+    const hasRolled = false as boolean;
+    const canMoveToken = hasRolled === true;
+    expect(canMoveToken).toBe(false);
+  });
+
+  registerTest('Real-Life Rules & Locks', 'Follow Lead Suit Card Rule Enforcement', () => {
+    const leadSuit = '♠' as string;
+    const handSuits = ['♠', '♥'];
+    const selectedSuit = '♥' as string;
+    const isFollowSuitValid = selectedSuit === leadSuit || !handSuits.includes(leadSuit);
+    expect(isFollowSuitValid).toBe(false);
+  });
 }

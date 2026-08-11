@@ -69,6 +69,20 @@ export const BhabhiGame: React.FC<BhabhiGameProps> = ({
   }, []);
 
   const playCard = (card: Card, playerIdx: number) => {
+    // Strict Turn Lock
+    if (playerIdx === 0 && turn !== 0) return;
+
+    // Real-Life Follow Lead Suit Rule Enforcement
+    if (playerIdx === 0 && currentTrick.length > 0) {
+      const leadSuit = currentTrick[0].card.suit;
+      const hasLeadSuit = playerHand.some((c) => c.suit === leadSuit);
+      if (hasLeadSuit && card.suit !== leadSuit) {
+        soundManager.playCapture();
+        setCommentary(`⚠️ Real Rules Lock: You must follow the lead suit (${leadSuit})! Thulla is only allowed when void of suit.`);
+        return;
+      }
+    }
+
     soundManager.playHomeEntry();
 
     const newTrick = [...currentTrick, { card, playerIdx }];

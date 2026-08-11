@@ -107,6 +107,9 @@ export const SattePeSattaGame: React.FC<SattePeSattaGameProps> = ({
   };
 
   const playCard = (card: Card, playerIdx: number) => {
+    // Strict Turn Lock
+    if (playerIdx === 0 && turn !== 0) return;
+
     soundManager.playHomeEntry();
 
     setPlayedCards((prev) => [...prev, card]);
@@ -145,6 +148,19 @@ export const SattePeSattaGame: React.FC<SattePeSattaGameProps> = ({
   };
 
   const handlePass = (playerIdx: number) => {
+    // Strict Turn Lock
+    if (playerIdx === 0 && turn !== 0) return;
+
+    // Real-Life Satte Pe Satta Rule: Player cannot Pass if they have a playable card in hand!
+    if (playerIdx === 0) {
+      const hasPlayableCard = playerHand.some((c) => isValidPlay(c));
+      if (hasPlayableCard) {
+        soundManager.playCapture();
+        setCommentary('⚠️ Real Rules Lock: You cannot Pass when you have a valid playable card in hand!');
+        return;
+      }
+    }
+
     soundManager.playTickSound();
     setCommentary(playerIdx === 0 ? '⚠️ You passed.' : `🤖 AI Player ${playerIdx} passed.`);
     nextTurn((playerIdx + 1) % 4);

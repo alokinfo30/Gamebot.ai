@@ -6,7 +6,7 @@
 [![Vite](https://img.shields.io/badge/Vite-6.2-646CFF?logo=vite)](https://vitejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.1-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
 [![Gemini AI](https://img.shields.io/badge/Gemini_AI-3.6_Flash-8E44AD?logo=google)](https://deepmind.google/technologies/gemini/)
-[![Vitest](https://img.shields.io/badge/Tests-28_Passed-27AE60?logo=vitest)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-38_Passed-27AE60?logo=vitest)](https://vitest.dev/)
 
 **GAMEBOT.AI** is a premium, web-based multi-game arena featuring **16+ AI-powered board, card, and motion sports games**. Designed with rich aesthetics, real-time Gemini AI integration, webcam gesture tracking, live multilingual voice commentary, ELO rank progression, and multi-layered WAF security.
 
@@ -92,14 +92,17 @@
 - **Security Shield Dashboard**: Verification modal displaying active WAF metrics.
 
 ### 11. Automated QA Testing Suite
-- Built-in Vitest test suite (`npm test` / `npx vitest run`) covering **28 unit & integration tests**:
+- Built-in Vitest test suite (`npm test` / `npx vitest run`) covering **38 unit & integration tests**:
+  - Universal Online & Offline Multiplayer Room Engine and 6-digit code generation.
+  - Room joining, seat assignments, and room capacity overflow guards.
+  - Turn locks, anti-cheating invariants, and roll-before-move strict guards.
+  - Authentic follow-lead-suit rules (Coat Piece & Bhabhi) and Satte Pe Satta playable card locks.
+  - Winner celebration modal, audio fanfare, and confetti triggers.
   - Security architecture & WAF payload neutralization.
   - Ludo board circuit bounds, safe cells, turn rotation, and base exit rules.
   - ELO calculations and AI decision heuristics.
   - Multilingual i18n translation dictionary fallbacks.
-  - Daily Missions reward computation.
-  - Theme DOM update synchronization.
-  - Gesture cheat sheet context resolution.
+  - Daily Missions reward computation & Theme DOM update synchronization.
 
 ---
 

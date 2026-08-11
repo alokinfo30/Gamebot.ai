@@ -5,10 +5,14 @@ import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
+
 export interface SnookerGameProps {
   language?: LanguageCode;
   isMuted?: boolean;
   isColorblindMode?: boolean;
+  playMode?: GamePlayMode;
+  roomCode?: string;
   onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
@@ -34,6 +38,8 @@ export const SnookerGame: React.FC<SnookerGameProps> = ({
   language,
   isMuted = false,
   isColorblindMode = false,
+  playMode = 'vs_ai',
+  roomCode,
   onDeclareWinner,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -335,6 +341,10 @@ export const SnookerGame: React.FC<SnookerGameProps> = ({
   };
 
   const executeAiTurn = useCallback(() => {
+    if (playMode === 'pass_and_play') {
+      setCommentary('🎱 Player 2 Turn! Line up your shot and pot the colored balls.');
+      return;
+    }
     setCommentary('🤖 AI Snooker Bot is lining up a pot...');
 
     setTimeout(() => {

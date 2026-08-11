@@ -29,6 +29,9 @@ import { CoachTooltip } from './components/CoachTooltip';
 import { CameraPermissionModal } from './components/CameraPermissionModal';
 import { QuitGameModal } from './components/QuitGameModal';
 import { GameVictoryModal } from './components/GameVictoryModal';
+import { GameMultiplayerLobbyModal } from './components/GameMultiplayerLobbyModal';
+import { GameMultiplayerToolbar } from './components/GameMultiplayerToolbar';
+import { GamePlayMode } from './logic/multiplayerRoomManager';
 import {
   GameState,
   PlayerColor,
@@ -227,6 +230,9 @@ export default function App() {
   });
   const [coachUsesCount, setCoachUsesCount] = useState<Record<string, number>>({});
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
+  const [gamePlayModes, setGamePlayModes] = useState<Record<string, GamePlayMode>>({});
+  const [gameRoomCodes, setGameRoomCodes] = useState<Record<string, string>>({});
+  const [showMultiplayerLobbyModal, setShowMultiplayerLobbyModal] = useState<boolean>(false);
   const [globalVictoryInfo, setGlobalVictoryInfo] = useState<{
     isOpen: boolean;
     winnerName: string;
@@ -1187,6 +1193,17 @@ export default function App() {
         </div>
       )}
 
+      {/* Universal Multiplayer Mode Toolbar (Online Room vs Pass & Play vs Single Player) */}
+      {activeGameSuiteTab !== 'home' && (
+        <div className="w-full max-w-7xl mx-auto pt-3 px-4">
+          <GameMultiplayerToolbar
+            playMode={gamePlayModes[activeGameSuiteTab] || 'vs_ai'}
+            roomCode={gameRoomCodes[activeGameSuiteTab]}
+            onOpenLobby={() => setShowMultiplayerLobbyModal(true)}
+          />
+        </div>
+      )}
+
       {/* Render AI Coach Tooltip (Max 3 Uses Per Match) */}
       {isCoachEnabled && showCoachTooltip && activeGameSuiteTab !== 'home' && Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) > 0 && (
         <div className="w-full max-w-7xl mx-auto pt-2 px-4">
@@ -1237,6 +1254,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['chess'] || 'vs_ai'}
+            roomCode={gameRoomCodes['chess']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CHESS', text)}
           />
         </section>
@@ -1248,6 +1267,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['teen_patti'] || 'vs_ai'}
+            roomCode={gameRoomCodes['teen_patti']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEEN PATTI', text)}
           />
         </section>
@@ -1259,6 +1280,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['rummy'] || 'vs_ai'}
+            roomCode={gameRoomCodes['rummy']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'RUMMY', text)}
           />
         </section>
@@ -1270,6 +1293,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['satte'] || 'vs_ai'}
+            roomCode={gameRoomCodes['satte']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SATTE PE SATTA', text)}
           />
         </section>
@@ -1281,6 +1306,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['coat_piece'] || 'vs_ai'}
+            roomCode={gameRoomCodes['coat_piece']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'COAT PIECE', text)}
           />
         </section>
@@ -1292,6 +1319,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['bhabhi'] || 'vs_ai'}
+            roomCode={gameRoomCodes['bhabhi']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BHABHI ARENA', text)}
           />
         </section>
@@ -1303,6 +1332,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['poker'] || 'vs_ai'}
+            roomCode={gameRoomCodes['poker']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEXAS HOLDEM POKER', text)}
           />
         </section>
@@ -1314,6 +1345,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['blackjack'] || 'vs_ai'}
+            roomCode={gameRoomCodes['blackjack']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CASINO BLACKJACK', text)}
           />
         </section>
@@ -1325,6 +1358,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['solitaire'] || 'vs_ai'}
+            roomCode={gameRoomCodes['solitaire']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SOLITAIRE', text)}
           />
         </section>
@@ -1336,6 +1371,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['donkey'] || 'vs_ai'}
+            roomCode={gameRoomCodes['donkey']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'REFLEX DONKEY', text)}
           />
         </section>
@@ -1347,6 +1384,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['bluff'] || 'vs_ai'}
+            roomCode={gameRoomCodes['bluff']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BLUFF ARENA', text)}
           />
         </section>
@@ -1358,6 +1397,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['snakes'] || 'vs_ai'}
+            roomCode={gameRoomCodes['snakes']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNAKES & LADDERS', text)}
           />
         </section>
@@ -1369,6 +1410,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['carrom'] || 'vs_ai'}
+            roomCode={gameRoomCodes['carrom']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CARROM ARENA', text)}
           />
         </section>
@@ -1380,6 +1423,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['snooker'] || 'vs_ai'}
+            roomCode={gameRoomCodes['snooker']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNOOKER & POOL', text)}
           />
         </section>
@@ -1391,6 +1436,8 @@ export default function App() {
             language={language}
             isMuted={isMuted}
             isColorblindMode={isColorblindMode}
+            playMode={gamePlayModes['tt'] || 'vs_ai'}
+            roomCode={gameRoomCodes['tt']}
             onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TABLE TENNIS', text)}
           />
         </section>
@@ -1728,6 +1775,21 @@ export default function App() {
         onBackToHub={() => {
           setGlobalVictoryInfo((prev) => ({ ...prev, isOpen: false }));
           setActiveGameSuiteTab('home');
+        }}
+      />
+
+      {/* Universal Multiplayer Lobby & Online Room Modal */}
+      <GameMultiplayerLobbyModal
+        isOpen={showMultiplayerLobbyModal}
+        gameKey={activeGameSuiteTab}
+        gameTitle={activeGameSuiteTab.replace('_', ' ').toUpperCase()}
+        userProfile={userProfile}
+        onClose={() => setShowMultiplayerLobbyModal(false)}
+        onStartMatch={(mode, roomCode) => {
+          setGamePlayModes((prev) => ({ ...prev, [activeGameSuiteTab]: mode }));
+          if (roomCode) {
+            setGameRoomCodes((prev) => ({ ...prev, [activeGameSuiteTab]: roomCode }));
+          }
         }}
       />
 

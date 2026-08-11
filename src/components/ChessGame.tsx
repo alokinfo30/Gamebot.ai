@@ -5,10 +5,14 @@ import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
+import { GamePlayMode, broadcastGameState, subscribeRoomEvents } from '../logic/multiplayerRoomManager';
+
 export interface ChessGameProps {
   language?: LanguageCode;
   isMuted?: boolean;
   isColorblindMode?: boolean;
+  playMode?: GamePlayMode;
+  roomCode?: string;
   onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
@@ -60,6 +64,8 @@ export const ChessGame: React.FC<ChessGameProps> = ({
   language,
   isMuted = false,
   isColorblindMode = false,
+  playMode = 'vs_ai',
+  roomCode,
   onDeclareWinner,
 }) => {
   const [board, setBoard] = useState<BoardState>(() => {
@@ -272,8 +278,9 @@ export const ChessGame: React.FC<ChessGameProps> = ({
     setTurn(nextTurn);
   };
 
-  // AI Turn Logic
+  // AI Turn Logic (Disabled in Pass & Play mode)
   useEffect(() => {
+    if (playMode === 'pass_and_play') return;
     if (turn === 'b') {
       const timer = setTimeout(() => {
         // Find all possible AI moves

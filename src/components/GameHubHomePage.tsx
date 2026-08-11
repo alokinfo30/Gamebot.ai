@@ -497,16 +497,21 @@ export const GameHubHomePage: React.FC<GameHubHomePageProps> = ({
                 </p>
               </div>
 
-              {/* Feature Tags */}
-              <div className="flex flex-wrap gap-1">
-                {game.features.map((feat, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800 text-[10px] font-medium text-slate-400"
-                  >
-                    {feat}
-                  </span>
-                ))}
+              {/* Feature Tags & Multiplayer Badge */}
+              <div className="flex flex-wrap gap-1 items-center justify-between">
+                <div className="flex flex-wrap gap-1">
+                  {game.features.map((feat, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800 text-[10px] font-medium text-slate-400"
+                    >
+                      {feat}
+                    </span>
+                  ))}
+                </div>
+                <span className="text-[9px] font-black px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">
+                  🌐 ONLINE & OFFLINE
+                </span>
               </div>
 
               {/* Action Buttons */}

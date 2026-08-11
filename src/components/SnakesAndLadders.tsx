@@ -5,10 +5,14 @@ import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t, getSpeechLang } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
+
 export interface SnakesAndLaddersProps {
   language?: LanguageCode;
   isMuted?: boolean;
   isColorblindMode?: boolean;
+  playMode?: GamePlayMode;
+  roomCode?: string;
   onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
@@ -59,18 +63,17 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
   language,
   isMuted = false,
   isColorblindMode = false,
+  playMode = 'vs_ai',
+  roomCode,
   onDeclareWinner,
 }) => {
   const [players, setPlayers] = useState<SnakesPlayer[]>(() => {
-    try {
-      const saved = localStorage.getItem('snakes_game_players');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
+    const isPass = playMode === 'pass_and_play';
     return [
-      { id: 'p1', name: 'You (Player 1)', color: 'red', position: 1, isBot: false, score: 0 },
-      { id: 'p2', name: 'AI Champion Bot', color: 'green', position: 1, isBot: true, score: 0 },
-      { id: 'p3', name: 'AI Master Bot', color: 'yellow', position: 1, isBot: true, score: 0 },
-      { id: 'p4', name: 'AI Pro Bot', color: 'blue', position: 1, isBot: true, score: 0 },
+      { id: 'p1', name: 'Player 1 (Red)', color: 'red', position: 1, isBot: false, score: 0 },
+      { id: 'p2', name: isPass ? 'Player 2 (Green)' : 'AI Champion Bot', color: 'green', position: 1, isBot: !isPass, score: 0 },
+      { id: 'p3', name: isPass ? 'Player 3 (Yellow)' : 'AI Master Bot', color: 'yellow', position: 1, isBot: !isPass, score: 0 },
+      { id: 'p4', name: isPass ? 'Player 4 (Blue)' : 'AI Pro Bot', color: 'blue', position: 1, isBot: !isPass, score: 0 },
     ];
   });
 

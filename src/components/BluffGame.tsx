@@ -5,10 +5,14 @@ import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
+
 export interface BluffGameProps {
   language?: LanguageCode;
   isMuted?: boolean;
   isColorblindMode?: boolean;
+  playMode?: GamePlayMode;
+  roomCode?: string;
   onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
@@ -32,6 +36,8 @@ export const BluffGame: React.FC<BluffGameProps> = ({
   language,
   isMuted = false,
   isColorblindMode = false,
+  playMode = 'vs_ai',
+  roomCode,
   onDeclareWinner,
 }) => {
   const [playerHand, setPlayerHand] = useState<Card[]>([]);

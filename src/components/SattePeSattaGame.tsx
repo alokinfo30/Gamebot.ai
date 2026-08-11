@@ -5,10 +5,14 @@ import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
+
 export interface SattePeSattaGameProps {
   language?: LanguageCode;
   isMuted?: boolean;
   isColorblindMode?: boolean;
+  playMode?: GamePlayMode;
+  roomCode?: string;
   onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
@@ -32,6 +36,8 @@ export const SattePeSattaGame: React.FC<SattePeSattaGameProps> = ({
   language,
   isMuted = false,
   isColorblindMode = false,
+  playMode = 'vs_ai',
+  roomCode,
   onDeclareWinner,
 }) => {
   const [tableLayout, setTableLayout] = useState<Record<Card['suit'], { min: number; max: number }>>({
@@ -182,6 +188,10 @@ export const SattePeSattaGame: React.FC<SattePeSattaGameProps> = ({
     }
 
     if (nextIdx > 0) {
+      if (playMode === 'pass_and_play') {
+        setCommentary(`🎯 Player ${nextIdx + 1} Turn! Play your card or Pass.`);
+        return;
+      }
       // AI Turn Execution
       setTimeout(() => {
         const aiHand = aiHands[nextIdx - 1];

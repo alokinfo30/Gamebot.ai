@@ -5,10 +5,14 @@ import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
+
 export interface CarromGameProps {
   language?: LanguageCode;
   isMuted?: boolean;
   isColorblindMode?: boolean;
+  playMode?: GamePlayMode;
+  roomCode?: string;
   onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
@@ -41,6 +45,8 @@ export const CarromGame: React.FC<CarromGameProps> = ({
   language,
   isMuted = false,
   isColorblindMode = false,
+  playMode = 'vs_ai',
+  roomCode,
   onDeclareWinner,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -427,8 +433,12 @@ export const CarromGame: React.FC<CarromGameProps> = ({
     setIsSimulating(true);
   };
 
-  // AI Turn Logic
+  // AI Turn Logic (Disabled in Pass & Play mode)
   const executeAiTurn = useCallback(() => {
+    if (playMode === 'pass_and_play') {
+      setCommentary('🎯 Player 2 Turn! Aim and strike!');
+      return;
+    }
     setCommentary('🤖 AI Carrom Bot is aiming for a coin...');
 
     setTimeout(() => {

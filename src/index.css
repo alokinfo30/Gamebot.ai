@@ -1,1 +1,44 @@
 @import "tailwindcss";
+
+/* ----------------------------------------------------
+   GAMEBOT.AI Performance & Isolation Engine
+   ---------------------------------------------------- */
+
+/* Layout containment for catalog cards and heavy game arenas */
+.game-card-containment {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+@supports not (content-visibility: auto) {
+  .game-card-containment {
+    contain: layout style paint;
+  }
+}
+
+.game-arena-containment {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 650px;
+}
+
+@supports not (content-visibility: auto) {
+  .game-arena-containment {
+    contain: layout style paint;
+  }
+}
+
+/* Hardware Acceleration Layer for Canvas Physics & Motion Games */
+.gpu-accelerated {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Hide scrollbars cleanly while preserving touch/mouse scrolling */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

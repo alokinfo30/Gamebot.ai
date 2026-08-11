@@ -65,23 +65,35 @@ import { SocialInviteModal } from './components/SocialInviteModal';
 import { ReactionsWidget } from './components/ReactionsWidget';
 import { ReactionBubble, ActiveReaction } from './components/ReactionBubble';
 import { SettingsModal } from './components/SettingsModal';
-import { SnakesAndLadders } from './components/SnakesAndLadders';
-import { CarromGame } from './components/CarromGame';
-import { SnookerGame } from './components/SnookerGame';
-import { TableTennisGame } from './components/TableTennisGame';
-import { ChessGame } from './components/ChessGame';
-import { TeenPattiGame } from './components/TeenPattiGame';
-import { RummyGame } from './components/RummyGame';
-import { SattePeSattaGame } from './components/SattePeSattaGame';
-import { CoatPieceGame } from './components/CoatPieceGame';
-import { BhabhiGame } from './components/BhabhiGame';
-import { PokerGame } from './components/PokerGame';
-import { BlackjackGame } from './components/BlackjackGame';
-import { SolitaireGame } from './components/SolitaireGame';
-import { DonkeyGame } from './components/DonkeyGame';
-import { BluffGame } from './components/BluffGame';
 import { SeoKnowledgeGuide } from './components/SeoKnowledgeGuide';
 import { SecurityShieldModal } from './components/SecurityShieldModal';
+
+// High Performance Code-Splitting: Lazy-load game components on demand
+const SnakesAndLadders = React.lazy(() => import('./components/SnakesAndLadders').then(m => ({ default: m.SnakesAndLadders })));
+const CarromGame = React.lazy(() => import('./components/CarromGame').then(m => ({ default: m.CarromGame })));
+const SnookerGame = React.lazy(() => import('./components/SnookerGame').then(m => ({ default: m.SnookerGame })));
+const TableTennisGame = React.lazy(() => import('./components/TableTennisGame').then(m => ({ default: m.TableTennisGame })));
+const ChessGame = React.lazy(() => import('./components/ChessGame').then(m => ({ default: m.ChessGame })));
+const TeenPattiGame = React.lazy(() => import('./components/TeenPattiGame').then(m => ({ default: m.TeenPattiGame })));
+const RummyGame = React.lazy(() => import('./components/RummyGame').then(m => ({ default: m.RummyGame })));
+const SattePeSattaGame = React.lazy(() => import('./components/SattePeSattaGame').then(m => ({ default: m.SattePeSattaGame })));
+const CoatPieceGame = React.lazy(() => import('./components/CoatPieceGame').then(m => ({ default: m.CoatPieceGame })));
+const BhabhiGame = React.lazy(() => import('./components/BhabhiGame').then(m => ({ default: m.BhabhiGame })));
+const PokerGame = React.lazy(() => import('./components/PokerGame').then(m => ({ default: m.PokerGame })));
+const BlackjackGame = React.lazy(() => import('./components/BlackjackGame').then(m => ({ default: m.BlackjackGame })));
+const SolitaireGame = React.lazy(() => import('./components/SolitaireGame').then(m => ({ default: m.SolitaireGame })));
+const DonkeyGame = React.lazy(() => import('./components/DonkeyGame').then(m => ({ default: m.DonkeyGame })));
+const BluffGame = React.lazy(() => import('./components/BluffGame').then(m => ({ default: m.BluffGame })));
+
+const GameLoadingSkeleton: React.FC = () => (
+  <div className="flex-1 w-full max-w-4xl mx-auto p-8 flex flex-col items-center justify-center min-h-[450px]">
+    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 animate-pulse flex items-center justify-center text-2xl shadow-xl shadow-blue-500/20 mb-4">
+      🎮
+    </div>
+    <div className="h-4 w-48 bg-slate-800 rounded-full animate-pulse mb-2" />
+    <div className="h-3 w-32 bg-slate-900 rounded-full animate-pulse" />
+  </div>
+);
 
 const TURN_TIMEOUT_SECONDS = 15;
 
@@ -1248,200 +1260,202 @@ export default function App() {
         </section>
       )}
 
-      {activeGameSuiteTab === 'chess' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <ChessGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['chess'] || 'vs_ai'}
-            roomCode={gameRoomCodes['chess']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CHESS', text)}
-          />
-        </section>
-      )}
+      <React.Suspense fallback={<GameLoadingSkeleton />}>
+        {activeGameSuiteTab === 'chess' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <ChessGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['chess'] || 'vs_ai'}
+              roomCode={gameRoomCodes['chess']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CHESS', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'teen_patti' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <TeenPattiGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['teen_patti'] || 'vs_ai'}
-            roomCode={gameRoomCodes['teen_patti']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEEN PATTI', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'teen_patti' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <TeenPattiGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['teen_patti'] || 'vs_ai'}
+              roomCode={gameRoomCodes['teen_patti']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEEN PATTI', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'rummy' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <RummyGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['rummy'] || 'vs_ai'}
-            roomCode={gameRoomCodes['rummy']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'RUMMY', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'rummy' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <RummyGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['rummy'] || 'vs_ai'}
+              roomCode={gameRoomCodes['rummy']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'RUMMY', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'satte' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SattePeSattaGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['satte'] || 'vs_ai'}
-            roomCode={gameRoomCodes['satte']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SATTE PE SATTA', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'satte' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <SattePeSattaGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['satte'] || 'vs_ai'}
+              roomCode={gameRoomCodes['satte']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SATTE PE SATTA', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'coat_piece' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <CoatPieceGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['coat_piece'] || 'vs_ai'}
-            roomCode={gameRoomCodes['coat_piece']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'COAT PIECE', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'coat_piece' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <CoatPieceGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['coat_piece'] || 'vs_ai'}
+              roomCode={gameRoomCodes['coat_piece']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'COAT PIECE', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'bhabhi' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <BhabhiGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['bhabhi'] || 'vs_ai'}
-            roomCode={gameRoomCodes['bhabhi']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BHABHI ARENA', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'bhabhi' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <BhabhiGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['bhabhi'] || 'vs_ai'}
+              roomCode={gameRoomCodes['bhabhi']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BHABHI ARENA', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'poker' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <PokerGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['poker'] || 'vs_ai'}
-            roomCode={gameRoomCodes['poker']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEXAS HOLDEM POKER', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'poker' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <PokerGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['poker'] || 'vs_ai'}
+              roomCode={gameRoomCodes['poker']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEXAS HOLDEM POKER', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'blackjack' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <BlackjackGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['blackjack'] || 'vs_ai'}
-            roomCode={gameRoomCodes['blackjack']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CASINO BLACKJACK', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'blackjack' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <BlackjackGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['blackjack'] || 'vs_ai'}
+              roomCode={gameRoomCodes['blackjack']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CASINO BLACKJACK', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'solitaire' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SolitaireGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['solitaire'] || 'vs_ai'}
-            roomCode={gameRoomCodes['solitaire']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SOLITAIRE', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'solitaire' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <SolitaireGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['solitaire'] || 'vs_ai'}
+              roomCode={gameRoomCodes['solitaire']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SOLITAIRE', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'donkey' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <DonkeyGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['donkey'] || 'vs_ai'}
-            roomCode={gameRoomCodes['donkey']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'REFLEX DONKEY', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'donkey' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <DonkeyGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['donkey'] || 'vs_ai'}
+              roomCode={gameRoomCodes['donkey']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'REFLEX DONKEY', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'bluff' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <BluffGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['bluff'] || 'vs_ai'}
-            roomCode={gameRoomCodes['bluff']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BLUFF ARENA', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'bluff' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <BluffGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['bluff'] || 'vs_ai'}
+              roomCode={gameRoomCodes['bluff']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BLUFF ARENA', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'snakes' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SnakesAndLadders
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['snakes'] || 'vs_ai'}
-            roomCode={gameRoomCodes['snakes']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNAKES & LADDERS', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'snakes' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <SnakesAndLadders
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['snakes'] || 'vs_ai'}
+              roomCode={gameRoomCodes['snakes']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNAKES & LADDERS', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'carrom' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <CarromGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['carrom'] || 'vs_ai'}
-            roomCode={gameRoomCodes['carrom']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CARROM ARENA', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'carrom' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <CarromGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['carrom'] || 'vs_ai'}
+              roomCode={gameRoomCodes['carrom']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CARROM ARENA', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'snooker' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SnookerGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['snooker'] || 'vs_ai'}
-            roomCode={gameRoomCodes['snooker']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNOOKER & POOL', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'snooker' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <SnookerGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['snooker'] || 'vs_ai'}
+              roomCode={gameRoomCodes['snooker']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNOOKER & POOL', text)}
+            />
+          </section>
+        )}
 
-      {activeGameSuiteTab === 'tt' && (
-        <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <TableTennisGame
-            language={language}
-            isMuted={isMuted}
-            isColorblindMode={isColorblindMode}
-            playMode={gamePlayModes['tt'] || 'vs_ai'}
-            roomCode={gameRoomCodes['tt']}
-            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TABLE TENNIS', text)}
-          />
-        </section>
-      )}
+        {activeGameSuiteTab === 'tt' && (
+          <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 game-arena-containment">
+            <TableTennisGame
+              language={language}
+              isMuted={isMuted}
+              isColorblindMode={isColorblindMode}
+              playMode={gamePlayModes['tt'] || 'vs_ai'}
+              roomCode={gameRoomCodes['tt']}
+              onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TABLE TENNIS', text)}
+            />
+          </section>
+        )}
+      </React.Suspense>
 
       {activeGameSuiteTab === 'ludo' && (
       <main className="flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row p-3 sm:p-6 gap-6 items-start justify-center">

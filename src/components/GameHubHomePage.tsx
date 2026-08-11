@@ -463,7 +463,7 @@ export const GameHubHomePage: React.FC<GameHubHomePageProps> = ({
               key={game.id}
               whileHover={{ y: -4 }}
               transition={{ duration: 0.15 }}
-              className={`relative rounded-2xl bg-gradient-to-b ${game.bgGradient} border ${game.borderColor} p-5 shadow-xl flex flex-col justify-between gap-4 group transition-all`}
+              className={`relative rounded-2xl bg-gradient-to-b ${game.bgGradient} border ${game.borderColor} p-5 shadow-xl flex flex-col justify-between gap-4 group transition-all game-card-containment`}
             >
               {/* Card Header: Badge & Category */}
               <div className="flex items-center justify-between">

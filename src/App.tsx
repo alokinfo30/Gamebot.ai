@@ -21,11 +21,13 @@ import {
   LayoutGrid,
   Camera,
   CameraOff,
+  LogOut,
 } from 'lucide-react';
 import { GameHubHomePage, GameKey } from './components/GameHubHomePage';
 import { GameDemoGuideModal } from './components/GameDemoGuideModal';
 import { CoachTooltip } from './components/CoachTooltip';
 import { CameraPermissionModal } from './components/CameraPermissionModal';
+import { QuitGameModal } from './components/QuitGameModal';
 import {
   GameState,
   PlayerColor,
@@ -223,9 +225,17 @@ export default function App() {
     tt: 1,
   });
   const [coachUsesCount, setCoachUsesCount] = useState<Record<string, number>>({});
+  const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
 
   // Auto-show game rules demo guide & mark active game session in progress
+  // Also IMMEDIATELY PAUSE background AI commentary TTS and background timers when switching away from game
   useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    } catch (e) {}
+
     if (activeGameSuiteTab === 'home') {
       setShowDemoGuideModal(false);
       setShowCoachTooltip(false);
@@ -241,13 +251,6 @@ export default function App() {
     } catch (e) {}
   }, [activeGameSuiteTab]);
 
-  const handleToggleColorblindMode = useCallback(() => {
-    setIsColorblindMode((prev) => {
-      const next = !prev;
-      localStorage.setItem('ludo_colorblind_mode', String(next));
-      return next;
-    });
-  }, []);
   const [urlRoomCode, setUrlRoomCode] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'offline_bot' | 'local_pass' | 'online_room'>(() => {
     try {
@@ -258,6 +261,43 @@ export default function App() {
     } catch (e) {}
     return 'offline_bot';
   });
+
+  const handleToggleColorblindMode = useCallback(() => {
+    setIsColorblindMode((prev) => {
+      const next = !prev;
+      localStorage.setItem('ludo_colorblind_mode', String(next));
+      return next;
+    });
+  }, []);
+
+  // Handle Quit & Forfeit Match Confirmation
+  const handleConfirmQuitGame = useCallback(() => {
+    setShowQuitModal(false);
+    
+    // Update profile for forfeit loss
+    const delta = -25;
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      elo: Math.max(800, userProfile.elo + delta),
+      matchesPlayed: userProfile.matchesPlayed + 1,
+      losses: userProfile.losses + 1,
+    };
+    setUserProfile(updatedProfile);
+    saveUserProfile(updatedProfile);
+
+    // Clear active game state in localStorage for this game
+    try {
+      localStorage.removeItem(`gamebot_active_${activeGameSuiteTab}_state`);
+      if (activeGameSuiteTab === 'ludo') {
+        localStorage.removeItem('ludo_active_game_state');
+        setGameState(createInitialGameState(activeTab, 'red', 'adaptive'));
+      }
+    } catch (e) {}
+
+    // Return to home hub cleanly
+    setActiveGameSuiteTab('home');
+    soundManager.playCapture();
+  }, [userProfile, activeGameSuiteTab, activeTab]);
   const [isOnlineLobbyOpen, setIsOnlineLobbyOpen] = useState<boolean>(() => {
     try {
       const savedLobby = localStorage.getItem('ludo_online_lobby_open');
@@ -1086,7 +1126,16 @@ export default function App() {
               className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-md shadow-blue-600/20 transition cursor-pointer"
             >
               <BookOpen className="w-3.5 h-3.5 text-blue-200" />
-              <span>📖 How to Play & Rules Guide</span>
+              <span>📖 Rules Guide</span>
+            </button>
+
+            <button
+              onClick={() => setShowQuitModal(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-rose-600/30 hover:bg-rose-600/50 text-rose-200 border border-rose-500/40 text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer"
+              title="Quit & Forfeit Current Match"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-400" />
+              <span>Quit Match</span>
             </button>
           </div>
         </div>
@@ -1530,6 +1579,16 @@ export default function App() {
         onGrant={handleGrantCameraPermission}
         onClose={() => setShowCameraPermissionModal(false)}
         language={language}
+      />
+
+      {/* Quit Match Confirmation Modal */}
+      <QuitGameModal
+        isOpen={showQuitModal}
+        gameTitle={activeGameSuiteTab.replace('_', ' ').toUpperCase()}
+        isOnline={activeTab === 'online_room'}
+        language={language}
+        onConfirmQuit={handleConfirmQuitGame}
+        onCancel={() => setShowQuitModal(false)}
       />
 
       {/* SEO & GEO Knowledge Hub for Search Engines and AI LLMs */}

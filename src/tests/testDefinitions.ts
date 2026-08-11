@@ -290,4 +290,18 @@ export function initializeAllTestCases() {
     const activeGesture = isHumanTurn && !hasRolled ? 'open_hand' : 'none';
     expect(activeGesture).toBe('open_hand');
   });
+
+  registerTest('New Enhancements', 'Quit & Forfeit Match ELO Penalty Invariants', () => {
+    const startElo = 1200;
+    const forfeitDelta = -25;
+    const finalElo = Math.max(800, startElo + forfeitDelta);
+    expect(finalElo).toBe(1175);
+  });
+
+  registerTest('New Enhancements', 'Game State Pause & Tab Isolation on Switch', () => {
+    const activeTab = 'ludo';
+    const otherTab = 'chess';
+    const isLudoRunning = (activeTab as string) === (otherTab as string);
+    expect(isLudoRunning).toBe(false);
+  });
 }

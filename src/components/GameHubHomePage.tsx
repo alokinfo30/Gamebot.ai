@@ -413,14 +413,6 @@ export const GameHubHomePage: React.FC<GameHubHomePageProps> = ({
         </div>
       </div>
 
-      {/* Daily Quests & Missions Component */}
-      {userProfile && (
-        <DailyMissions
-          userProfile={userProfile}
-          onProfileUpdated={onProfileUpdated}
-        />
-      )}
-
       {/* Category Filters & Search Bar */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Category Pills */}
@@ -558,6 +550,16 @@ export const GameHubHomePage: React.FC<GameHubHomePageProps> = ({
           >
             Clear Search Filter
           </button>
+        </div>
+      )}
+
+      {/* Daily Quests & ELO Boosts Section (Positioned After All Games Section) */}
+      {userProfile && (
+        <div className="pt-4 border-t border-slate-800/80">
+          <DailyMissions
+            userProfile={userProfile}
+            onProfileUpdated={onProfileUpdated}
+          />
         </div>
       )}
     </div>

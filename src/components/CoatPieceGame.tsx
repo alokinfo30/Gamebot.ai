@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface CoatPieceGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -29,8 +30,9 @@ const getCardLabel = (card: Card) => {
 
 export const CoatPieceGame: React.FC<CoatPieceGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [trumpSuit, setTrumpSuit] = useState<Card['suit'] | null>(null);
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
@@ -134,10 +136,25 @@ export const CoatPieceGame: React.FC<CoatPieceGameProps> = ({
     });
 
     const isTeam1 = winningPlay.playerIdx === 0 || winningPlay.playerIdx === 2;
+    let nextTeam1 = tricksTeam1;
+    let nextTeam2 = tricksTeam2;
     if (isTeam1) {
-      setTricksTeam1((t) => t + 1);
+      nextTeam1 += 1;
+      setTricksTeam1(nextTeam1);
     } else {
-      setTricksTeam2((t) => t + 1);
+      nextTeam2 += 1;
+      setTricksTeam2(nextTeam2);
+    }
+
+    if (nextTeam1 >= 7 || nextTeam2 >= 7) {
+      soundManager.playVictory();
+      const isTeam1Win = nextTeam1 >= 7;
+      const winTitle = isTeam1Win ? 'Your Team Wins Court!' : 'AI Team Wins Court!';
+      setCommentary(`🏆 GAME OVER! ${winTitle}`);
+      if (onDeclareWinner) {
+        onDeclareWinner(isTeam1Win ? 'Team You & AI Partner' : 'AI Opponent Team', isTeam1Win, 'COAT PIECE', `Tricks Won: ${nextTeam1} - ${nextTeam2}`);
+      }
+      return;
     }
 
     soundManager.playCapture();

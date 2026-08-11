@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface DonkeyGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -28,8 +29,9 @@ const getCardLabel = (card: Card) => {
 
 export const DonkeyGame: React.FC<DonkeyGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [aiHands, setAiHands] = useState<Card[][]>([[], [], []]);
@@ -115,8 +117,14 @@ export const DonkeyGame: React.FC<DonkeyGameProps> = ({
 
     if (newTouched.length === 4) {
       const loser = newTouched[3];
-      soundManager.playCapture();
-      setCommentary(`💥 MATCH OVER! Player ${loser === 0 ? 'You are' : loser + ' is'} the DONKEY! 🫏`);
+      const winnerIdx = newTouched[0];
+      const isHumanWin = winnerIdx === 0;
+      const winnerName = isHumanWin ? 'You (Player 1)' : `AI Player ${winnerIdx}`;
+      soundManager.playVictory();
+      setCommentary(`💥 MATCH OVER! ${winnerName} Wins! Player ${loser === 0 ? 'You are' : loser} is the DONKEY! 🫏`);
+      if (onDeclareWinner) {
+        onDeclareWinner(winnerName, isHumanWin, 'REFLEX DONKEY', `Winner: ${winnerName} | Donkey Penalty: Player ${loser}`);
+      }
     } else {
       setCommentary(`🖐️ Player ${playerIdx === 0 ? 'You' : playerIdx} touched the table!`);
     }

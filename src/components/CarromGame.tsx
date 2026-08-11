@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface CarromGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 export interface Coin {
@@ -38,8 +39,9 @@ const POCKET_RADIUS = 24;
 
 export const CarromGame: React.FC<CarromGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -460,9 +462,13 @@ export const CarromGame: React.FC<CarromGameProps> = ({
     const unpocketed = coinsRef.current.filter((c) => !c.isPocketed);
     if (unpocketed.length === 0) {
       soundManager.playVictory();
-      const winText = playerScore > aiScore ? 'You Win!' : 'AI Bot Wins!';
-      setWinner(winText);
-      setCommentary(`🏆 GAME OVER! ${winText}`);
+      const isHuman = playerScore >= aiScore;
+      const winnerName = isHuman ? 'You (Player 1)' : 'AI Carrom Bot';
+      setWinner(winnerName);
+      setCommentary(`🏆 GAME OVER! ${winnerName} Wins!`);
+      if (onDeclareWinner) {
+        onDeclareWinner(winnerName, isHuman, 'CARROM ARENA', `Final Score: ${playerScore} vs ${aiScore}`);
+      }
       return;
     }
 

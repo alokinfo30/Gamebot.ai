@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface ChessGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 type PieceType = 'p' | 'r' | 'n' | 'b' | 'q' | 'k';
@@ -57,8 +58,9 @@ const INITIAL_BOARD: BoardState = [
 
 export const ChessGame: React.FC<ChessGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [board, setBoard] = useState<BoardState>(() => {
     try {
@@ -302,6 +304,9 @@ export const ChessGame: React.FC<ChessGameProps> = ({
         } else {
           setCommentary('🎉 Checkmate! AI has no legal moves left. You Win!');
           soundManager.playVictory();
+          if (onDeclareWinner) {
+            onDeclareWinner('You (Player 1)', true, 'CHESS GRANDMASTER', 'Checkmate! White Pieces Victory!');
+          }
         }
       }, 1000);
 

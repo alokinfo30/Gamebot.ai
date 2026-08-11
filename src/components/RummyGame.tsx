@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface RummyGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -29,8 +30,9 @@ const getCardLabel = (card: Card) => {
 
 export const RummyGame: React.FC<RummyGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [aiHand, setAiHand] = useState<Card[]>([]);
@@ -148,6 +150,9 @@ export const RummyGame: React.FC<RummyGameProps> = ({
   const handleDeclare = () => {
     soundManager.playVictory();
     setCommentary('🏆 DECLARE SUCCESSFUL! Valid Sequences & Sets formed! You Win!');
+    if (onDeclareWinner) {
+      onDeclareWinner('You (Player 1)', true, 'INDIAN RUMMY ARENA', '13-Card Valid Meld & Sequence Declaration!');
+    }
   };
 
   return (

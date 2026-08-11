@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface BhabhiGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -29,8 +30,9 @@ const getCardLabel = (card: Card) => {
 
 export const BhabhiGame: React.FC<BhabhiGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [aiHands, setAiHands] = useState<Card[][]>([[], [], []]);
@@ -156,6 +158,9 @@ export const BhabhiGame: React.FC<BhabhiGameProps> = ({
       setEscapedPlayers((prev) => [...prev, 0]);
       soundManager.playVictory();
       setCommentary('🎉 YOU CLEARED ALL CARDS & ESCAPED! You are Safe!');
+      if (onDeclareWinner) {
+        onDeclareWinner('You (Player 1)', true, 'BHABHI THULLA ARENA', 'Cleared All Hand Cards & Escaped Penalty!');
+      }
     }
   };
 

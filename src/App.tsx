@@ -28,6 +28,7 @@ import { GameDemoGuideModal } from './components/GameDemoGuideModal';
 import { CoachTooltip } from './components/CoachTooltip';
 import { CameraPermissionModal } from './components/CameraPermissionModal';
 import { QuitGameModal } from './components/QuitGameModal';
+import { GameVictoryModal } from './components/GameVictoryModal';
 import {
   GameState,
   PlayerColor,
@@ -226,6 +227,42 @@ export default function App() {
   });
   const [coachUsesCount, setCoachUsesCount] = useState<Record<string, number>>({});
   const [showQuitModal, setShowQuitModal] = useState<boolean>(false);
+  const [globalVictoryInfo, setGlobalVictoryInfo] = useState<{
+    isOpen: boolean;
+    winnerName: string;
+    isHumanWinner: boolean;
+    gameTitle: string;
+    scoreText?: string;
+  }>({
+    isOpen: false,
+    winnerName: '',
+    isHumanWinner: true,
+    gameTitle: 'GAMEBOT.AI',
+  });
+
+  const handleDeclareWinner = useCallback(
+    (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => {
+      setGlobalVictoryInfo({
+        isOpen: true,
+        winnerName,
+        isHumanWinner,
+        gameTitle,
+        scoreText,
+      });
+
+      if (isHumanWinner) {
+        const updatedProfile: UserProfile = {
+          ...userProfile,
+          elo: userProfile.elo + 25,
+          matchesPlayed: userProfile.matchesPlayed + 1,
+          wins: userProfile.wins + 1,
+        };
+        setUserProfile(updatedProfile);
+        saveUserProfile(updatedProfile);
+      }
+    },
+    [userProfile]
+  );
 
   // Auto-show game rules demo guide & mark active game session in progress
   // Also IMMEDIATELY PAUSE background AI commentary TTS and background timers when switching away from game
@@ -609,6 +646,12 @@ export default function App() {
 
       // Check Game Over (Winner decided)
       const isGameOver = newRankings.length >= 3 || (newRankings.length === 1 && gameState.players.length === 2);
+      if (isGameOver) {
+        const winnerP = updatedPlayers.find((p) => p.color === newRankings[0]);
+        const winnerName = winnerP ? winnerP.name : newRankings[0].toUpperCase();
+        const isHuman = winnerP ? winnerP.type === 'human' : false;
+        handleDeclareWinner(winnerName, isHuman, 'LUDO ARENA', `1st Place Champion: ${winnerName}`);
+      }
 
       let nextTurnColor = gameState.currentTurnColor;
       if (!isExtraRollAwarded && !isGameOver) {
@@ -1190,91 +1233,166 @@ export default function App() {
 
       {activeGameSuiteTab === 'chess' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <ChessGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <ChessGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CHESS', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'teen_patti' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <TeenPattiGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <TeenPattiGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEEN PATTI', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'rummy' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <RummyGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <RummyGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'RUMMY', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'satte' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SattePeSattaGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <SattePeSattaGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SATTE PE SATTA', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'coat_piece' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <CoatPieceGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <CoatPieceGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'COAT PIECE', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'bhabhi' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <BhabhiGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <BhabhiGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BHABHI ARENA', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'poker' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <PokerGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <PokerGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TEXAS HOLDEM POKER', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'blackjack' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <BlackjackGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <BlackjackGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CASINO BLACKJACK', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'solitaire' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SolitaireGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <SolitaireGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SOLITAIRE', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'donkey' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <DonkeyGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <DonkeyGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'REFLEX DONKEY', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'bluff' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <BluffGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <BluffGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'BLUFF ARENA', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'snakes' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SnakesAndLadders language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <SnakesAndLadders
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNAKES & LADDERS', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'carrom' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <CarromGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <CarromGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'CARROM ARENA', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'snooker' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <SnookerGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <SnookerGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNOOKER & POOL', text)}
+          />
         </section>
       )}
 
       {activeGameSuiteTab === 'tt' && (
         <section className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6">
-          <TableTennisGame language={language} isMuted={isMuted} isColorblindMode={isColorblindMode} />
+          <TableTennisGame
+            language={language}
+            isMuted={isMuted}
+            isColorblindMode={isColorblindMode}
+            onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'TABLE TENNIS', text)}
+          />
         </section>
       )}
 
@@ -1592,6 +1710,25 @@ export default function App() {
         language={language}
         onConfirmQuit={handleConfirmQuitGame}
         onCancel={() => setShowQuitModal(false)}
+      />
+
+      {/* Universal Winner Declaration & Confetti Celebration Modal */}
+      <GameVictoryModal
+        isOpen={globalVictoryInfo.isOpen}
+        winnerName={globalVictoryInfo.winnerName}
+        isHumanWinner={globalVictoryInfo.isHumanWinner}
+        gameTitle={globalVictoryInfo.gameTitle}
+        scoreText={globalVictoryInfo.scoreText}
+        onPlayAgain={() => {
+          setGlobalVictoryInfo((prev) => ({ ...prev, isOpen: false }));
+          if (activeGameSuiteTab === 'ludo') {
+            setGameState(createInitialGameState('offline_bot', 'red', 'adaptive'));
+          }
+        }}
+        onBackToHub={() => {
+          setGlobalVictoryInfo((prev) => ({ ...prev, isOpen: false }));
+          setActiveGameSuiteTab('home');
+        }}
       />
 
       {/* SEO & GEO Knowledge Hub for Search Engines and AI LLMs */}

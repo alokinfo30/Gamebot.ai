@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface PokerGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -40,8 +41,9 @@ const getCardLabel = (card: Card) => {
 
 export const PokerGame: React.FC<PokerGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
   const [communityCards, setCommunityCards] = useState<Card[]>([]);
@@ -194,6 +196,9 @@ export const PokerGame: React.FC<PokerGameProps> = ({
       prev.map((p) => (p.id === winner.id ? { ...p, chips: p.chips + pot } : p))
     );
     setCommentary(`🏆 SHOWDOWN OVER! ${winner.name} wins the Pot of ${pot} chips!`);
+    if (onDeclareWinner) {
+      onDeclareWinner(winner.name, !winner.isAi, "TEXAS HOLD'EM POKER", `Showdown Pot Won: ${pot} Chips`);
+    }
   };
 
   const player = players[0];

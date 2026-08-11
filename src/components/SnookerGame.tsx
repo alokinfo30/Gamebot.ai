@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface SnookerGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 export interface SnookerBall {
@@ -31,8 +32,9 @@ const POCKET_RADIUS = 18;
 
 export const SnookerGame: React.FC<SnookerGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -369,9 +371,13 @@ export const SnookerGame: React.FC<SnookerGameProps> = ({
     const remaining = ballsRef.current.filter((b) => b.type !== 'cue' && !b.isPocketed);
     if (remaining.length === 0) {
       soundManager.playVictory();
-      const winText = playerScore > aiScore ? 'You Win!' : 'AI Bot Wins!';
-      setWinner(winText);
-      setCommentary(`🏆 SNOOKER MATCH OVER! ${winText}`);
+      const isHumanWin = playerScore >= aiScore;
+      const winnerName = isHumanWin ? 'You (Player 1)' : 'AI Snooker Bot';
+      setWinner(winnerName);
+      setCommentary(`🏆 SNOOKER MATCH OVER! ${winnerName} Wins!`);
+      if (onDeclareWinner) {
+        onDeclareWinner(winnerName, isHumanWin, 'SNOOKER & POOL', `Final Score: ${playerScore} vs ${aiScore}`);
+      }
       return;
     }
 

@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface TableTennisGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 const COURT_W = 500;
@@ -16,8 +17,9 @@ const COURT_H = 340;
 
 export const TableTennisGame: React.FC<TableTennisGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -206,9 +208,11 @@ export const TableTennisGame: React.FC<TableTennisGameProps> = ({
           setPlayerScore((s) => {
             const next = s + 1;
             if (next >= 11) {
-              soundManager.playVictory();
               setWinner('You Win!');
               setCommentary('🏆 CONGRATULATIONS! YOU WON THE TABLE TENNIS MATCH!');
+              if (onDeclareWinner) {
+                onDeclareWinner('You (Player 1)', true, 'TABLE TENNIS', `Final Score: ${next} - ${aiScore}`);
+              }
             } else {
               setCommentary(`🎉 Point for You! (+1) Score: You ${next} - AI ${aiScore}`);
               resetRally('ai');
@@ -223,6 +227,9 @@ export const TableTennisGame: React.FC<TableTennisGameProps> = ({
             if (next >= 11) {
               setWinner('AI Bot Wins!');
               setCommentary('🤖 AI BOT WON THE TABLE TENNIS MATCH!');
+              if (onDeclareWinner) {
+                onDeclareWinner('Pro Spins AI Bot', false, 'TABLE TENNIS', `Final Score: ${playerScore} - ${next}`);
+              }
             } else {
               setCommentary(`💥 Point for AI! Score: You ${playerScore} - AI ${next}`);
               resetRally('player');

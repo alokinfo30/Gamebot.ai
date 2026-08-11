@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface SolitaireGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -32,8 +33,9 @@ const isRed = (suit: Card['suit']) => suit === '♥' || suit === '♦';
 
 export const SolitaireGame: React.FC<SolitaireGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [stock, setStock] = useState<Card[]>([]);
   const [waste, setWaste] = useState<Card[]>([]);
@@ -83,6 +85,17 @@ export const SolitaireGame: React.FC<SolitaireGameProps> = ({
   useEffect(() => {
     startNewGame();
   }, []);
+
+  useEffect(() => {
+    const totalFoundations = foundations.reduce((acc, f) => acc + f.length, 0);
+    if (totalFoundations === 52) {
+      soundManager.playVictory();
+      setCommentary('🏆 SOLITAIRE VICTORY! All 52 cards built into foundations!');
+      if (onDeclareWinner) {
+        onDeclareWinner('You (Player 1)', true, 'SOLITAIRE ARENA', 'Completed All 4 Suit Foundations!');
+      }
+    }
+  }, [foundations, onDeclareWinner]);
 
   const handleStockClick = () => {
     soundManager.playTickSound();

@@ -6,9 +6,10 @@ import { LanguageCode, t, getSpeechLang } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface SnakesAndLaddersProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 export interface SnakeOrLadder {
@@ -56,8 +57,9 @@ const PLAYER_COLORS_MAP = {
 
 export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [players, setPlayers] = useState<SnakesPlayer[]>(() => {
     try {
@@ -196,6 +198,9 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
             setWinner(player);
             setCommentary(`🏆 ${player.name} HAS WON THE SNAKES & LADDERS CHAMPIONSHIP! 🎉`);
             isMovingRef.current = false;
+            if (onDeclareWinner) {
+              onDeclareWinner(player.name, !player.isBot, 'SNAKES & LADDERS', `${player.name} reached Square 100!`);
+            }
             return;
           }
 

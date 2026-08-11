@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface BluffGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -29,8 +30,9 @@ const getCardLabel = (card: Card) => {
 
 export const BluffGame: React.FC<BluffGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [aiHands, setAiHands] = useState<Card[][]>([[], [], []]);
@@ -88,6 +90,15 @@ export const BluffGame: React.FC<BluffGameProps> = ({
       actualCards: thrownCards,
     });
     setSelectedCards([]);
+
+    if (remainingHand.length === 0) {
+      soundManager.playVictory();
+      setCommentary('🏆 CONGRATULATIONS! You cleared all cards first in Bluff!');
+      if (onDeclareWinner) {
+        onDeclareWinner('You (Player 1)', true, 'BLUFF ARENA', 'Cleared All Hand Cards First!');
+      }
+      return;
+    }
 
     const rankLabel = VAL_LABELS[claimedRank] || claimedRank.toString();
     setCommentary(`🃏 You claimed: ${thrownCards.length}x ${rankLabel}(s)!`);

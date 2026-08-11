@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface SattePeSattaGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -29,8 +30,9 @@ const getCardLabel = (card: Card) => {
 
 export const SattePeSattaGame: React.FC<SattePeSattaGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [tableLayout, setTableLayout] = useState<Record<Card['suit'], { min: number; max: number }>>({
     '♥': { min: 8, max: 6 }, // 7 start
@@ -173,6 +175,9 @@ export const SattePeSattaGame: React.FC<SattePeSattaGameProps> = ({
     if (playerHand.length === 0) {
       soundManager.playVictory();
       setCommentary('🏆 CONGRATULATIONS! You cleared all cards first in Satte Pe Satta!');
+      if (onDeclareWinner) {
+        onDeclareWinner('You (Player 1)', true, 'SATTE PE SATTA', 'All 13 Cards Cleared First!');
+      }
       return;
     }
 

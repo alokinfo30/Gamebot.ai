@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface TeenPattiGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -38,8 +39,9 @@ const getCardLabel = (card: Card) => {
 
 export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
   const [pot, setPot] = useState<number>(0);
@@ -172,7 +174,11 @@ export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
       )
     );
 
+    soundManager.playVictory();
     setCommentary(`🏆 SHOWDOWN! ${winner.name} wins the Pot of ${pot} chips!`);
+    if (onDeclareWinner) {
+      onDeclareWinner(winner.name, !winner.isAi, 'INDIAN TEEN PATTI', `Showdown Pot Won: ${pot} Chips`);
+    }
   };
 
   const nextTurn = () => {

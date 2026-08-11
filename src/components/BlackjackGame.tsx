@@ -6,9 +6,10 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface BlackjackGameProps {
-  language: LanguageCode;
-  isMuted: boolean;
-  isColorblindMode: boolean;
+  language?: LanguageCode;
+  isMuted?: boolean;
+  isColorblindMode?: boolean;
+  onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
 interface Card {
@@ -51,8 +52,9 @@ const calculateScore = (cards: Card[]): number => {
 
 export const BlackjackGame: React.FC<BlackjackGameProps> = ({
   language,
-  isMuted,
-  isColorblindMode,
+  isMuted = false,
+  isColorblindMode = false,
+  onDeclareWinner,
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
@@ -149,6 +151,9 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
       soundManager.playVictory();
       setPlayerChips((c) => c + bet);
       setCommentary(`🏆 YOU WIN! Your ${pScore} beat Dealer's ${dScore > 21 ? 'BUST (' + dScore + ')' : dScore}!`);
+      if (onDeclareWinner) {
+        onDeclareWinner('You (Player 1)', true, 'CASINO BLACKJACK', `Hand Won: ${pScore} vs Dealer ${dScore}`);
+      }
     } else if (pScore === dScore) {
       soundManager.playTickSound();
       setCommentary(`🤝 PUSH! Tie match at ${pScore}. Bet returned.`);

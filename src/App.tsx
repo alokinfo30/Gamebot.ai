@@ -586,8 +586,8 @@ export default function App() {
         const nextState: GameState = {
           ...prev,
           players: updatedPlayers,
-          hasRolled: isExtraRollAwarded, // If extra turn, keep or reset roll
-          diceValue: isExtraRollAwarded ? prev.diceValue : null,
+          hasRolled: false, // Reset roll state so player can roll their extra turn or next player turn
+          diceValue: null, // Reset dice value for new roll
           validMoves: [],
           rankings: newRankings,
           currentTurnColor: nextTurnColor,

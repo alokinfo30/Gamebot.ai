@@ -651,61 +651,118 @@ export default function App() {
     [gameState, currentTurnPlayer, userProfile]
   );
 
-  // AI Bot Automated Turn Effect
+  // AI Bot Automated Turn Effect (Two-Step Roll & Move Pipeline)
   useEffect(() => {
     if (gameState.status !== 'playing') return;
+    if (!currentTurnPlayer || currentTurnPlayer.type !== 'bot') return;
 
-    if (currentTurnPlayer && currentTurnPlayer.type === 'bot') {
-      if (isProcessingTurn.current) return;
-      isProcessingTurn.current = true;
+    let botTimer: NodeJS.Timeout;
 
-      const botTimer = setTimeout(() => {
-        if (!gameState.hasRolled) {
-          // 1. Bot Rolls Dice
-          const dice = Math.floor(Math.random() * 6) + 1;
-          soundManager.playDiceRoll();
+    if (!gameState.hasRolled) {
+      // Step 1: Bot Automatically Rolls Dice
+      botTimer = setTimeout(() => {
+        const dice = Math.floor(Math.random() * 6) + 1;
+        soundManager.playDiceRoll();
 
-          const validMoves = getValidMovesForPlayer(currentTurnPlayer, dice);
+        let sixes = gameState.diceValue === 6 ? gameState.sixesInARow + 1 : 0;
+        if (dice === 6) sixes++;
 
-          if (validMoves.length === 0) {
-            const nextTurn =
-              dice === 6
-                ? gameState.currentTurnColor
-                : getNextTurnColor(
-                    gameState.currentTurnColor,
-                    gameState.players,
-                    gameState.rankings
-                  );
+        // 3 Consecutive 6s Forfeit Rule
+        if (sixes >= 3) {
+          const nextTurn = getNextTurnColor(
+            gameState.currentTurnColor,
+            gameState.players,
+            gameState.rankings
+          );
+          setGameState((prev) => ({
+            ...prev,
+            diceValue: 6,
+            hasRolled: false,
+            sixesInARow: 0,
+            currentTurnColor: nextTurn,
+            commentary: `${currentTurnPlayer.name} rolled 3 sixes in a row! Turn forfeited.`,
+            logs: [
+              ...prev.logs,
+              {
+                turnNumber: prev.turnCount,
+                color: prev.currentTurnColor,
+                playerName: currentTurnPlayer.name,
+                dice: 6,
+                action: 'three_sixes_forfeit',
+                tokenId: -1,
+                fromStep: -1,
+                toStep: -1,
+                timestamp: Date.now(),
+              },
+            ],
+          }));
+          return;
+        }
 
-            setGameState((prev) => ({
-              ...prev,
-              diceValue: dice,
-              hasRolled: false,
-              validMoves: [],
-              currentTurnColor: nextTurn,
-              commentary: `${currentTurnPlayer.name} rolled a ${dice}. No valid moves.`,
-            }));
-            isProcessingTurn.current = false;
-          } else {
-            // 2. Bot selects move
-            const botChoice = selectBotMove(currentTurnPlayer, gameState, dice);
-            if (botChoice) {
-              setTimeout(() => {
-                handleExecuteMove(botChoice.tokenId, dice);
-                isProcessingTurn.current = false;
-              }, 400);
-            } else {
-              isProcessingTurn.current = false;
-            }
+        const validMoves = getValidMovesForPlayer(currentTurnPlayer, dice);
+
+        if (validMoves.length === 0) {
+          const nextTurn =
+            dice === 6
+              ? gameState.currentTurnColor
+              : getNextTurnColor(
+                  gameState.currentTurnColor,
+                  gameState.players,
+                  gameState.rankings
+                );
+
+          setGameState((prev) => ({
+            ...prev,
+            diceValue: dice,
+            hasRolled: false,
+            validMoves: [],
+            sixesInARow: dice === 6 ? sixes : 0,
+            currentTurnColor: nextTurn,
+            commentary: `${currentTurnPlayer.name} rolled a ${dice}. No valid moves.`,
+          }));
+        } else {
+          setGameState((prev) => ({
+            ...prev,
+            diceValue: dice,
+            hasRolled: true,
+            validMoves,
+            sixesInARow: dice === 6 ? sixes : 0,
+            commentary: `${currentTurnPlayer.name} rolled a ${dice}! Selecting best tactical move...`,
+          }));
+
+          // Contextual reaction trigger for bot rolling 6
+          if (dice === 6 && Math.random() < 0.5) {
+            handleSendReaction('🔥', 'emoji', currentTurnPlayer.color);
           }
         }
-      }, 700);
-
-      return () => clearTimeout(botTimer);
-    } else {
-      isProcessingTurn.current = false;
+      }, 600);
+    } else if (gameState.hasRolled && gameState.diceValue !== null) {
+      // Step 2: Bot Chooses & Executes Best Move on Board
+      botTimer = setTimeout(() => {
+        const botChoice = selectBotMove(currentTurnPlayer, gameState, gameState.diceValue!);
+        if (botChoice) {
+          handleExecuteMove(botChoice.tokenId, gameState.diceValue!);
+        } else if (gameState.validMoves.length > 0) {
+          handleExecuteMove(gameState.validMoves[0].tokenId, gameState.diceValue!);
+        } else {
+          const nextTurn = getNextTurnColor(
+            gameState.currentTurnColor,
+            gameState.players,
+            gameState.rankings
+          );
+          setGameState((prev) => ({
+            ...prev,
+            hasRolled: false,
+            validMoves: [],
+            currentTurnColor: nextTurn,
+            commentary: `${currentTurnPlayer.name} turn passed.`,
+          }));
+        }
+      }, 650);
     }
-  }, [gameState, currentTurnPlayer, handleExecuteMove]);
+
+    return () => clearTimeout(botTimer);
+  }, [gameState, currentTurnPlayer, handleExecuteMove, handleSendReaction]);
 
   // Turn Timeout Auto-Action
   useEffect(() => {

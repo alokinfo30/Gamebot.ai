@@ -312,7 +312,23 @@ export const GameHubHomePage: React.FC<GameHubHomePageProps> = ({
     return matchesCategory && matchesSearch;
   });
 
-  const activeGameMeta = GAMES_CATALOG.find((g) => g.id === activeGameKey) || GAMES_CATALOG[0];
+  // Detect all active games in progress stored in localStorage or active
+  const resumableGames = GAMES_CATALOG.filter((game) => {
+    if (activeGameKey === game.id) return true;
+    try {
+      if (game.id === 'ludo') {
+        const ludoState = localStorage.getItem('ludo_active_game_state');
+        if (ludoState) {
+          const parsed = JSON.parse(ludoState);
+          return parsed.status === 'playing';
+        }
+      } else {
+        const activeState = localStorage.getItem(`gamebot_active_${game.id}_state`);
+        if (activeState === 'true') return true;
+      }
+    } catch (e) {}
+    return false;
+  });
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-8 text-slate-100">
@@ -353,36 +369,45 @@ export const GameHubHomePage: React.FC<GameHubHomePageProps> = ({
             </div>
           </div>
 
-          {/* Quick Active Game Resume Widget */}
-          {activeGameMeta && (
-            <div className="w-full lg:w-80 p-5 rounded-2xl bg-slate-900/90 border border-blue-500/40 shadow-xl backdrop-blur-md flex flex-col gap-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          {/* Quick Active Games Resume Widget */}
+          {resumableGames.length > 0 && (
+            <div className="w-full lg:w-88 p-4 rounded-2xl bg-slate-900/90 border border-blue-500/40 shadow-xl backdrop-blur-md flex flex-col gap-3">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Game in Progress</span>
+                  <span>Games in Progress ({resumableGames.length})</span>
                 </span>
-                <span className="text-xs font-mono font-bold text-emerald-400">
-                  Ready to Play
+                <span className="text-[10px] font-mono font-bold text-emerald-400">
+                  Ready to Resume
                 </span>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-2xl shadow-md border border-white/20">
-                  {activeGameMeta.emoji}
-                </div>
-                <div>
-                  <h4 className="text-sm font-black text-white">{activeGameMeta.title}</h4>
-                  <p className="text-[11px] text-slate-400 font-mono">{activeGameMeta.categoryLabel}</p>
-                </div>
-              </div>
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {resumableGames.map((gameMeta) => (
+                  <div
+                    key={gameMeta.id}
+                    className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-blue-500/50 transition flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-lg shadow-md border border-white/20 shrink-0">
+                        {gameMeta.emoji}
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-black text-white truncate">{gameMeta.title}</h4>
+                        <p className="text-[10px] text-slate-400 font-mono truncate">{gameMeta.categoryLabel}</p>
+                      </div>
+                    </div>
 
-              <button
-                onClick={() => onSelectGame(activeGameMeta.id)}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition cursor-pointer border border-blue-400/30"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Resume {activeGameMeta.title}</span>
-              </button>
+                    <button
+                      onClick={() => onSelectGame(gameMeta.id)}
+                      className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[11px] font-extrabold flex items-center gap-1 shadow-md shadow-blue-600/30 transition cursor-pointer shrink-0"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Resume</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

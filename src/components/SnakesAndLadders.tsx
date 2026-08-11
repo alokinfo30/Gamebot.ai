@@ -242,7 +242,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4 flex flex-col items-center select-none">
+    <div className="w-full max-w-[940px] mx-auto space-y-4 flex flex-col items-center select-none">
       {/* Header Bar */}
       <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center gap-3">
@@ -253,11 +253,11 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
             <h1 className="text-lg font-black text-white flex items-center gap-2">
               <span>{t('game_snakes', language)}</span>
               <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold">
-                AI EDITION
+                100 TILE BOARD
               </span>
             </h1>
             <p className="text-xs text-slate-400 font-medium">
-              Classic 100-Square Board • Interactive AI Bots • Live Commentary
+              Multi-Dice System • Animated Ladders & Snakes • Voice Commentary
             </p>
           </div>
         </div>
@@ -276,8 +276,8 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
       {/* Main Game Arena Layout */}
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Side: 10x10 Board Grid */}
-        <div className="lg:col-span-8 flex flex-col items-center justify-center">
-          <div className="relative w-full max-w-[540px] aspect-square bg-slate-950 p-2 sm:p-3 rounded-2xl border-4 border-slate-800 shadow-2xl overflow-hidden">
+        <div className="lg:col-span-8 flex flex-col items-center justify-center w-full">
+          <div className="relative w-full max-w-[940px] aspect-square bg-slate-950 p-2 sm:p-4 rounded-3xl border-4 border-slate-800 shadow-2xl overflow-hidden">
             {/* Grid Cells */}
             <div className="grid grid-cols-10 grid-rows-10 w-full h-full gap-0.5 sm:gap-1 bg-slate-900/60 rounded-xl p-1 relative">
               {Array.from({ length: 10 }).map((_, rIdx) =>

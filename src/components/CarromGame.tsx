@@ -478,7 +478,7 @@ export const CarromGame: React.FC<CarromGameProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4 flex flex-col items-center select-none">
+    <div className="w-full max-w-[940px] mx-auto space-y-4 flex flex-col items-center select-none">
       {/* Header Bar */}
       <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center gap-3">
@@ -512,8 +512,8 @@ export const CarromGame: React.FC<CarromGameProps> = ({
       {/* Main Game Layout */}
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Side: Carrom Canvas Board */}
-        <div className="lg:col-span-8 flex flex-col items-center justify-center space-y-3">
-          <div className="relative w-full max-w-[500px] aspect-square bg-slate-950 p-2 rounded-2xl border-4 border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center">
+        <div className="lg:col-span-8 flex flex-col items-center justify-center space-y-3 w-full">
+          <div className="relative w-full max-w-[940px] aspect-square bg-slate-950 p-2 sm:p-4 rounded-3xl border-4 border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center">
             <canvas
               ref={canvasRef}
               width={BOARD_SIZE}

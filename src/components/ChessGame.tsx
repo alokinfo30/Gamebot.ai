@@ -310,7 +310,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({
   }, [turn, board, calculateMoves]);
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4 flex flex-col items-center select-none">
+    <div className="w-full max-w-[940px] mx-auto space-y-4 flex flex-col items-center select-none">
       {/* Header Bar */}
       <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center gap-3">
@@ -342,9 +342,9 @@ export const ChessGame: React.FC<ChessGameProps> = ({
       {/* Main Board Arena */}
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Side: 8x8 Board */}
-        <div className="lg:col-span-8 flex flex-col items-center justify-center space-y-3">
-          <div className="bg-slate-950 p-3 rounded-2xl border-4 border-slate-800 shadow-2xl">
-            <div className="grid grid-cols-8 gap-0 border-2 border-slate-700 rounded-lg overflow-hidden w-[320px] h-[320px] sm:w-[440px] sm:h-[440px]">
+        <div className="lg:col-span-8 flex flex-col items-center justify-center space-y-3 w-full">
+          <div className="bg-slate-950 p-2 sm:p-4 rounded-3xl border-4 border-slate-800 shadow-2xl w-full flex items-center justify-center">
+            <div className="grid grid-cols-8 gap-0 border-2 border-slate-700 rounded-xl overflow-hidden w-full max-w-[760px] aspect-square">
               {board.map((row, r) =>
                 row.map((cell, c) => {
                   const isLight = (r + c) % 2 === 0;
@@ -355,7 +355,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({
                     <button
                       key={`${r}-${c}`}
                       onClick={() => handleSquareClick(r, c)}
-                      className={`relative flex items-center justify-center text-2xl sm:text-3xl font-extrabold transition-all cursor-pointer ${
+                      className={`relative flex items-center justify-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold transition-all cursor-pointer ${
                         isLight ? 'bg-amber-100 text-slate-900' : 'bg-amber-800 text-amber-50'
                       } ${isSelected ? 'ring-4 ring-blue-500 z-10' : ''}`}
                     >

@@ -162,7 +162,7 @@ export const BluffGame: React.FC<BluffGameProps> = ({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-4 flex flex-col items-center select-none">
+    <div className="w-full max-w-[940px] mx-auto space-y-4 flex flex-col items-center select-none">
       {/* Header Bar */}
       <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center gap-3">
@@ -194,8 +194,8 @@ export const BluffGame: React.FC<BluffGameProps> = ({
       {/* Main Arena */}
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Side: Table & Controls */}
-        <div className="lg:col-span-8 flex flex-col items-center justify-center space-y-4">
-          <div className="w-full bg-emerald-950 border-4 border-amber-900/60 rounded-3xl p-6 shadow-2xl space-y-6 flex flex-col items-center">
+        <div className="lg:col-span-8 flex flex-col items-center justify-center space-y-4 w-full">
+          <div className="w-full bg-emerald-950 border-4 border-amber-900/60 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-6 flex flex-col items-center justify-between min-h-[540px] sm:min-h-[640px]">
             {/* Center Discard Pile & Call Bluff Button */}
             <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 w-full text-center space-y-3">
               <span className="text-xs font-bold text-amber-300 uppercase block">

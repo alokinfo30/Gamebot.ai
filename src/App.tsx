@@ -224,7 +224,7 @@ export default function App() {
   });
   const [coachUsesCount, setCoachUsesCount] = useState<Record<string, number>>({});
 
-  // Auto-show game rules demo guide whenever a player opens or switches to an active game
+  // Auto-show game rules demo guide & mark active game session in progress
   useEffect(() => {
     if (activeGameSuiteTab === 'home') {
       setShowDemoGuideModal(false);
@@ -232,6 +232,7 @@ export default function App() {
       return;
     }
     try {
+      localStorage.setItem(`gamebot_active_${activeGameSuiteTab}_state`, 'true');
       const isDisabled = localStorage.getItem(`gamebot_auto_guide_${activeGameSuiteTab}`) === 'false';
       if (!isDisabled) {
         setShowDemoGuideModal(true);

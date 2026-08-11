@@ -222,6 +222,7 @@ export default function App() {
     snooker: 1,
     tt: 1,
   });
+  const [coachUsesCount, setCoachUsesCount] = useState<Record<string, number>>({});
 
   // Auto-show game rules demo guide whenever a player opens or switches to an active game
   useEffect(() => {
@@ -381,6 +382,7 @@ export default function App() {
     setSelectedTokenId(null);
     setTurnSecondsLeft(TURN_TIMEOUT_SECONDS);
     setCoachTurnCounts((prev) => ({ ...prev, ludo: 1 }));
+    setCoachUsesCount((prev) => ({ ...prev, ludo: 0 }));
 
     // Show guide when a new Ludo game has been started (unless user disabled auto guide)
     try {
@@ -1035,10 +1037,18 @@ export default function App() {
               {activeGameSuiteTab.replace('_', ' ')}
             </span>
 
-            {(coachTurnCounts[activeGameSuiteTab] || 1) <= 3 && isCoachEnabled && (
-              <span className="ml-2 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[10px] font-mono font-bold flex items-center gap-1.5 animate-pulse">
+            {isCoachEnabled && (
+              <span className={`ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1.5 ${
+                Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) > 0
+                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 animate-pulse'
+                  : 'bg-slate-800 text-slate-400 border border-slate-700'
+              }`}>
                 <Lightbulb className="w-3 h-3 text-amber-300" />
-                <span>AI Coach Active (Turn {coachTurnCounts[activeGameSuiteTab] || 1}/3)</span>
+                <span>
+                  {Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) > 0
+                    ? `AI Coach (${Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0))}/3 Uses Left)`
+                    : `AI Coach Limit Reached (3/3 used)`}
+                </span>
               </span>
             )}
           </div>
@@ -1046,17 +1056,28 @@ export default function App() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
-                setIsCoachEnabled((prev) => !prev);
-                setShowCoachTooltip(true);
+                if (Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) > 0) {
+                  setIsCoachEnabled(true);
+                  setShowCoachTooltip(true);
+                }
               }}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer ${
-                isCoachEnabled
-                  ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50 hover:bg-indigo-600/40'
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+              disabled={Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) === 0}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-extrabold flex items-center gap-1.5 transition ${
+                Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) === 0
+                  ? 'bg-slate-900 text-slate-600 border-slate-800 cursor-not-allowed'
+                  : isCoachEnabled
+                  ? 'bg-indigo-600/30 text-indigo-300 border-indigo-500/50 hover:bg-indigo-600/40 cursor-pointer'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200 cursor-pointer'
               }`}
             >
               <Lightbulb className="w-3.5 h-3.5 text-amber-300" />
-              <span>{isCoachEnabled ? 'AI Coach On' : 'Enable AI Coach'}</span>
+              <span>
+                {Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) === 0
+                  ? 'Coach Limit Reached (3/3)'
+                  : isCoachEnabled
+                  ? `AI Coach On (${Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0))}/3 Left)`
+                  : `Enable AI Coach (${Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0))}/3 Left)`}
+              </span>
             </button>
 
             <button
@@ -1070,17 +1091,21 @@ export default function App() {
         </div>
       )}
 
-      {/* Render Non-Intrusive AI Coach Tooltip for Turns 1 to 3 */}
-      {isCoachEnabled && showCoachTooltip && activeGameSuiteTab !== 'home' && (coachTurnCounts[activeGameSuiteTab] || 1) <= 3 && (
+      {/* Render AI Coach Tooltip (Max 3 Uses Per Match) */}
+      {isCoachEnabled && showCoachTooltip && activeGameSuiteTab !== 'home' && Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0)) > 0 && (
         <div className="w-full max-w-7xl mx-auto pt-2 px-4">
           <CoachTooltip
             gameKey={activeGameSuiteTab}
             turnNumber={coachTurnCounts[activeGameSuiteTab] || 1}
+            usesRemaining={Math.max(0, 3 - (coachUsesCount[activeGameSuiteTab] || 0))}
             isHumanTurn={true}
             language={language}
             onDismiss={() => {
               setShowCoachTooltip(false);
-              // Advance turn count for this game after user dismisses or acknowledges tip
+              setCoachUsesCount((prev) => ({
+                ...prev,
+                [activeGameSuiteTab]: (prev[activeGameSuiteTab] || 0) + 1,
+              }));
               setCoachTurnCounts((prev) => ({
                 ...prev,
                 [activeGameSuiteTab]: (prev[activeGameSuiteTab] || 1) + 1,

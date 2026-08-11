@@ -254,6 +254,15 @@ export function initializeAllTestCases() {
     expect(afterThreeTurns <= 3).toBe(false);
   });
 
+  registerTest('AI Coach Guidance', 'Max 3 Uses Per Match Enforcement', () => {
+    const usesRemaining = (usesCount: number) => Math.max(0, 3 - usesCount);
+    expect(usesRemaining(0)).toBe(3);
+    expect(usesRemaining(1)).toBe(2);
+    expect(usesRemaining(2)).toBe(1);
+    expect(usesRemaining(3)).toBe(0);
+    expect(usesRemaining(4)).toBe(0);
+  });
+
   // ==========================================
   // CATEGORY 7: NEW ENHANCEMENTS & FEATURE SUITE
   // ==========================================

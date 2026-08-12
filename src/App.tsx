@@ -442,8 +442,9 @@ export default function App() {
     setTurnSecondsLeft(TURN_TIMEOUT_SECONDS);
   }, [gameState.currentTurnColor, gameState.turnCount, gameState.hasRolled, gameState.status]);
 
-  // Turn countdown interval
+  // Turn countdown interval (Paused when not viewing Ludo)
   useEffect(() => {
+    if (activeGameSuiteTab !== 'ludo') return;
     if (gameState.status !== 'playing') return;
 
     const timer = setInterval(() => {
@@ -459,7 +460,7 @@ export default function App() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameState.status, isMuted]);
+  }, [gameState.status, isMuted, activeGameSuiteTab]);
 
   // Start New Game
   const handleStartNewGame = (
@@ -758,8 +759,9 @@ export default function App() {
     [gameState, currentTurnPlayer, userProfile]
   );
 
-  // AI Bot Automated Turn Effect (Two-Step Roll & Move Pipeline)
+  // AI Bot Automated Turn Effect (Two-Step Roll & Move Pipeline - Paused when not viewing Ludo)
   useEffect(() => {
+    if (activeGameSuiteTab !== 'ludo') return;
     if (gameState.status !== 'playing') return;
     if (!currentTurnPlayer || currentTurnPlayer.type !== 'bot') return;
 
@@ -869,10 +871,11 @@ export default function App() {
     }
 
     return () => clearTimeout(botTimer);
-  }, [gameState, currentTurnPlayer, handleExecuteMove, handleSendReaction]);
+  }, [gameState, currentTurnPlayer, handleExecuteMove, handleSendReaction, activeGameSuiteTab]);
 
-  // Turn Timeout Auto-Action
+  // Turn Timeout Auto-Action (Paused when not viewing Ludo)
   useEffect(() => {
+    if (activeGameSuiteTab !== 'ludo') return;
     if (turnSecondsLeft === 0 && gameState.status === 'playing') {
       const currentTurn = gameState.players.find((p) => p.color === gameState.currentTurnColor);
       if (!gameState.hasRolled) {
@@ -896,7 +899,7 @@ export default function App() {
         }
       }
     }
-  }, [turnSecondsLeft, gameState, handleRollDice, handleExecuteMove]);
+  }, [turnSecondsLeft, gameState, handleRollDice, handleExecuteMove, activeGameSuiteTab]);
 
   // Handle Gesture Trigger Actions
   const handleGestureAction = useCallback((gesture: GestureType) => {

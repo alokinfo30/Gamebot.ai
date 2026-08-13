@@ -64,14 +64,40 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
   onDeclareWinner,
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
-  const [playerCards, setPlayerCards] = useState<Card[]>([]);
-  const [dealerCards, setDealerCards] = useState<Card[]>([]);
-  const [playerChips, setPlayerChips] = useState<number>(500);
+  const [playerCards, setPlayerCards] = useState<Card[]>(() => {
+    try {
+      const saved = localStorage.getItem('blackjack_player_cards');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
+  });
+  const [dealerCards, setDealerCards] = useState<Card[]>(() => {
+    try {
+      const saved = localStorage.getItem('blackjack_dealer_cards');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
+  });
+  const [playerChips, setPlayerChips] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('blackjack_player_chips');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 500;
+  });
   const [bet, setBet] = useState<number>(50);
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [commentary, setCommentary] = useState<string | null>(
     '🃏 Blackjack 21 match started! Place your bet and click Deal.'
   );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('blackjack_player_cards', JSON.stringify(playerCards));
+      localStorage.setItem('blackjack_dealer_cards', JSON.stringify(dealerCards));
+      localStorage.setItem('blackjack_player_chips', String(playerChips));
+    } catch (e) {}
+  }, [playerCards, dealerCards, playerChips]);
 
   const startNewHand = useCallback(() => {
     soundManager.playDiceRoll();

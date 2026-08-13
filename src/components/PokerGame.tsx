@@ -53,19 +53,48 @@ export const PokerGame: React.FC<PokerGameProps> = ({
   onDeclareWinner,
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
-  const [communityCards, setCommunityCards] = useState<Card[]>([]);
-  const [pot, setPot] = useState<number>(0);
+  const [communityCards, setCommunityCards] = useState<Card[]>(() => {
+    try {
+      const saved = localStorage.getItem('poker_game_community');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
+  });
+  const [pot, setPot] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('poker_game_pot');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 0;
+  });
   const [currentBet, setCurrentBet] = useState<number>(20);
   const [stage, setStage] = useState<Stage>('preflop');
   const [commentary, setCommentary] = useState<string | null>(
     '🎰 Texas Hold\'em Poker match started! Pre-flop betting round open.'
   );
 
-  const [players, setPlayers] = useState<Player[]>([
-    { id: 'player', name: 'You', chips: 1000, holeCards: [], currentBet: 0, isFolded: false, isAi: false },
-    { id: 'ai1', name: 'Vikram AI', chips: 1000, holeCards: [], currentBet: 0, isFolded: false, isAi: true },
-    { id: 'ai2', name: 'Rohan AI', chips: 1000, holeCards: [], currentBet: 0, isFolded: false, isAi: true },
-  ]);
+  const [players, setPlayers] = useState<Player[]>(() => {
+    try {
+      const saved = localStorage.getItem('poker_game_players');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [
+      { id: 'player', name: 'You', chips: 1000, holeCards: [], currentBet: 0, isFolded: false, isAi: false },
+      { id: 'ai1', name: 'Vikram AI', chips: 1000, holeCards: [], currentBet: 0, isFolded: false, isAi: true },
+      { id: 'ai2', name: 'Rohan AI', chips: 1000, holeCards: [], currentBet: 0, isFolded: false, isAi: true },
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('poker_game_community', JSON.stringify(communityCards));
+      localStorage.setItem('poker_game_pot', String(pot));
+      localStorage.setItem('poker_game_players', JSON.stringify(players));
+    } catch (e) {}
+  }, [communityCards, pot, players]);
 
   const [activeIdx, setActiveIdx] = useState<number>(0);
 

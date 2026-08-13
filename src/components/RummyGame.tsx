@@ -41,10 +41,30 @@ export const RummyGame: React.FC<RummyGameProps> = ({
   roomCode,
   onDeclareWinner,
 }) => {
-  const [playerHand, setPlayerHand] = useState<Card[]>([]);
+  const [playerHand, setPlayerHand] = useState<Card[]>(() => {
+    try {
+      const saved = localStorage.getItem('rummy_player_hand');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
+  });
   const [aiHand, setAiHand] = useState<Card[]>([]);
   const [stockPile, setStockPile] = useState<Card[]>([]);
-  const [discardPile, setDiscardPile] = useState<Card[]>([]);
+  const [discardPile, setDiscardPile] = useState<Card[]>(() => {
+    try {
+      const saved = localStorage.getItem('rummy_discard_pile');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('rummy_player_hand', JSON.stringify(playerHand));
+      localStorage.setItem('rummy_discard_pile', JSON.stringify(discardPile));
+    } catch (e) {}
+  }, [playerHand, discardPile]);
+
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [hasDrawn, setHasDrawn] = useState<boolean>(false);
   const [turn, setTurn] = useState<'player' | 'ai'>('player');

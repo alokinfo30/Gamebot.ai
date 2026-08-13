@@ -151,6 +151,15 @@ export default function App() {
     }
     return createInitialGameState('offline_bot', 'red', 'adaptive');
   });
+
+  // Unconditionally save Ludo active game state to localStorage on every state change
+  useEffect(() => {
+    try {
+      if (gameState && gameState.status === 'playing') {
+        localStorage.setItem('ludo_active_game_state', JSON.stringify(gameState));
+      }
+    } catch (e) {}
+  }, [gameState]);
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean>(
     () => localStorage.getItem('gamebot_camera_permission_granted') === 'true'

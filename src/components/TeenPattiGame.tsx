@@ -51,18 +51,40 @@ export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
   onDeclareWinner,
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
-  const [pot, setPot] = useState<number>(0);
+  const [pot, setPot] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('teen_patti_pot');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 0;
+  });
   const [currentStake, setCurrentStake] = useState<number>(20);
   const [commentary, setCommentary] = useState<string | null>(
     '🃏 Teen Patti match initialized! Cards dealt. Place your Blind or Chaal bet!'
   );
 
-  const [players, setPlayers] = useState<Player[]>([
-    { id: 'player', name: 'You', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: false },
-    { id: 'ai1', name: 'Vikram AI', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: true },
-    { id: 'ai2', name: 'Rohan AI', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: true },
-    { id: 'ai3', name: 'Ananya AI', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: true },
-  ]);
+  const [players, setPlayers] = useState<Player[]>(() => {
+    try {
+      const saved = localStorage.getItem('teen_patti_players');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [
+      { id: 'player', name: 'You', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: false },
+      { id: 'ai1', name: 'Vikram AI', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: true },
+      { id: 'ai2', name: 'Rohan AI', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: true },
+      { id: 'ai3', name: 'Ananya AI', chips: 1000, cards: [], isSeen: false, isFolded: false, isAi: true },
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('teen_patti_pot', String(pot));
+      localStorage.setItem('teen_patti_players', JSON.stringify(players));
+    } catch (e) {}
+  }, [pot, players]);
 
   const [activeIdx, setActiveIdx] = useState<number>(0);
   const [gameOver, setGameOver] = useState<boolean>(false);

@@ -23,6 +23,7 @@ import {
 } from './ColorblindPatterns';
 import { TurnTimer } from './TurnTimer';
 import { Dice } from './Dice';
+import { ClassicLudo3DPawn } from './ClassicLudo3DPawn';
 import { GestureControl } from './GestureControl';
 import { ReactionsWidget } from './ReactionsWidget';
 import { PlayerProfileModal } from './PlayerProfileModal';
@@ -372,31 +373,17 @@ export const Board: React.FC<BoardProps> = ({
                         onRollDice();
                       }
                     }}
-                    className={`pointer-events-auto relative w-4/5 h-4/5 rounded-full border-2 transition-all flex items-center justify-center font-extrabold text-[10px] text-white overflow-hidden ${tokenBg3D} ${
+                    className={`pointer-events-auto relative w-[95%] h-[95%] flex items-center justify-center ${
                       player.color === interactiveColor && isHumanTurn ? 'cursor-pointer' : 'cursor-not-allowed opacity-90'
-                    } ${
-                      isMovable
-                        ? 'ring-4 ring-yellow-300 ring-offset-1 ring-offset-slate-950 animate-bounce z-30'
-                        : ''
-                    } ${isSelected ? 'ring-4 ring-cyan-400 z-40' : ''}`}
+                    }`}
                   >
-                    {/* 3D Specular Highlight Dome */}
-                    <div className="absolute top-0.5 left-1 right-1 h-2 rounded-t-full bg-gradient-to-b from-white/70 to-transparent pointer-events-none z-10" />
-
-                    {/* Pattern Texture Overlay on Token */}
-                    {isColorblindMode && (
-                      <ColorblindPatternOverlay color={token.color} opacity={0.85} />
-                    )}
-
-                    {/* Inner Metallic Bevel Ring with Number & Symbol */}
-                    <div className="w-3/4 h-3/4 rounded-full border-2 border-white/90 bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center relative z-20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8),0_1px_2px_rgba(255,255,255,0.4)]">
-                      <span className="text-[10px] sm:text-xs font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)] flex items-center gap-0.5">
-                        {isColorblindMode && (
-                          <span className="text-[8px] opacity-90">{COLORBIND_SYMBOLS[token.color]}</span>
-                        )}
-                        <span>{token.id + 1}</span>
-                      </span>
-                    </div>
+                    <ClassicLudo3DPawn
+                      color={token.color}
+                      tokenId={token.id}
+                      isMovable={isMovable}
+                      isSelected={isSelected}
+                      isColorblindMode={isColorblindMode}
+                    />
                   </motion.div>
                 );
               })}

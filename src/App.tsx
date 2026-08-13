@@ -1415,6 +1415,7 @@ export default function App() {
               isColorblindMode={isColorblindMode}
               playMode={gamePlayModes['snakes'] || 'vs_ai'}
               roomCode={gameRoomCodes['snakes']}
+              isActiveTab={activeGameSuiteTab === 'snakes'}
               onDeclareWinner={(name, isHuman, title, text) => handleDeclareWinner(name, isHuman, title || 'SNAKES & LADDERS', text)}
             />
           </section>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { RotateCcw, Volume2, VolumeX, Sparkles, Trophy, Bot, Play, ShieldAlert, Award, Eye } from 'lucide-react';
+import { RotateCcw, Volume2, VolumeX, Sparkles, Trophy, Bot, Play, ShieldAlert, Award, Eye, Clock } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
@@ -15,6 +15,7 @@ export interface SnakesAndLaddersProps {
   isColorblindMode?: boolean;
   playMode?: GamePlayMode;
   roomCode?: string;
+  isActiveTab?: boolean;
   onDeclareWinner?: (winnerName: string, isHumanWinner: boolean, gameTitle: string, scoreText?: string) => void;
 }
 
@@ -22,6 +23,7 @@ export interface SnakeOrLadder {
   from: number;
   to: number;
   type: 'snake' | 'ladder';
+  snakeType?: 'anaconda' | 'python' | 'cobra';
 }
 
 export interface SnakesPlayer {
@@ -43,15 +45,15 @@ export const SNAKES_AND_LADDERS_DATA: SnakeOrLadder[] = [
   { from: 51, to: 67, type: 'ladder' },
   { from: 63, to: 81, type: 'ladder' },
   { from: 71, to: 91, type: 'ladder' },
-  // Snakes
-  { from: 17, to: 7, type: 'snake' },
-  { from: 54, to: 34, type: 'snake' },
-  { from: 62, to: 19, type: 'snake' },
-  { from: 64, to: 60, type: 'snake' },
-  { from: 87, to: 24, type: 'snake' },
-  { from: 93, to: 73, type: 'snake' },
-  { from: 95, to: 75, type: 'snake' },
-  { from: 99, to: 78, type: 'snake' },
+  // Realistic 3D Anaconda & Python Snakes
+  { from: 17, to: 7, type: 'snake', snakeType: 'anaconda' },
+  { from: 54, to: 34, type: 'snake', snakeType: 'python' },
+  { from: 62, to: 19, type: 'snake', snakeType: 'anaconda' },
+  { from: 64, to: 60, type: 'snake', snakeType: 'cobra' },
+  { from: 87, to: 24, type: 'snake', snakeType: 'anaconda' },
+  { from: 93, to: 73, type: 'snake', snakeType: 'python' },
+  { from: 95, to: 75, type: 'snake', snakeType: 'anaconda' },
+  { from: 99, to: 78, type: 'snake', snakeType: 'anaconda' },
 ];
 
 const PLAYER_COLORS_MAP: Record<PlayerColor, { bg: string; border: string; text: string; hex: string }> = {
@@ -62,9 +64,9 @@ const PLAYER_COLORS_MAP: Record<PlayerColor, { bg: string; border: string; text:
 };
 
 function getSquareCenterPercent(num: number): { x: number; y: number } {
-  const rowFromBottom = Math.floor((num - 1) / 10); // 0 (bottom) to 9 (top)
+  const rowFromBottom = Math.floor((num - 1) / 10);
   const colFromLeft = rowFromBottom % 2 === 0 ? (num - 1) % 10 : 9 - ((num - 1) % 10);
-  const rowIdxTop = 9 - rowFromBottom; // 0 (top) to 9 (bottom)
+  const rowIdxTop = 9 - rowFromBottom;
 
   const x = (colFromLeft + 0.5) * 10;
   const y = (rowIdxTop + 0.5) * 10;
@@ -77,6 +79,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
   isColorblindMode = false,
   playMode = 'vs_ai',
   roomCode,
+  isActiveTab = true,
   onDeclareWinner,
 }) => {
   const [players, setPlayers] = useState<SnakesPlayer[]>(() => {
@@ -94,12 +97,12 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
   const [isRolling, setIsRolling] = useState<boolean>(false);
   const [winner, setWinner] = useState<SnakesPlayer | null>(null);
   const [is3DView, setIs3DView] = useState<boolean>(true);
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState<number>(15);
   const [commentary, setCommentary] = useState<string | null>(
     t('your_turn', language) + ' 🎲 ' + t('roll_dice', language)
   );
 
   const isMovingRef = useRef<boolean>(false);
-
   const currentPlayer = players[currentTurnIdx] || players[0];
 
   const handleResetGame = () => {
@@ -114,9 +117,15 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
     setCurrentTurnIdx(0);
     setDiceValue(null);
     setWinner(null);
+    setTurnTimerSeconds(15);
     isMovingRef.current = false;
     setCommentary(t('your_turn', language) + ' 🎲 ' + t('roll_dice', language));
   };
+
+  const nextTurn = useCallback(() => {
+    setCurrentTurnIdx((prev) => (prev + 1) % players.length);
+    setTurnTimerSeconds(15);
+  }, [players.length]);
 
   const executeMove = useCallback((roll: number) => {
     isMovingRef.current = true;
@@ -157,7 +166,8 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
               targetPos = feature.to;
             } else if (feature.type === 'snake') {
               soundManager.playCapture();
-              setCommentary(`🐍 SNAKE BITE! ${player.name} slithered down from Square ${feature.from} ⬇ TO Square ${feature.to}!`);
+              const snakeLabel = feature.snakeType === 'anaconda' ? '🐍 ANACONDA BITE!' : '🐍 SNAKE BITE!';
+              setCommentary(`${snakeLabel} ${player.name} slithered down from Square ${feature.from} ⬇ TO Square ${feature.to}!`);
               setPlayers((prev) =>
                 prev.map((p, idx) => (idx === currentTurnIdx ? { ...p, position: feature.to } : p))
               );
@@ -181,6 +191,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
           if (roll === 6) {
             setCommentary(`🎲 ROLLED A 6! ${player.name} gets another turn!`);
             isMovingRef.current = false;
+            setTurnTimerSeconds(15);
           } else {
             isMovingRef.current = false;
             nextTurn();
@@ -188,7 +199,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
         }, 400);
       }
     }, 150);
-  }, [players, currentTurnIdx, onDeclareWinner]);
+  }, [players, currentTurnIdx, nextTurn, onDeclareWinner]);
 
   const handleRollDice = useCallback(() => {
     if (isRolling || isMovingRef.current || winner) return;
@@ -210,14 +221,13 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
     }, 70);
   }, [isRolling, winner, executeMove]);
 
-  const nextTurn = useCallback(() => {
-    setCurrentTurnIdx((prev) => (prev + 1) % players.length);
-  }, [players.length]);
-
-  // Automated AI Turn Loop Effect
+  // ACTIVE TAB & AI BOT TURN LOOP + 15S COUNTDOWN TIMER
   useEffect(() => {
-    if (winner || isRolling || isMovingRef.current) return;
+    // ACTIVE TAB GUARD: If player navigates to Ludo or another game, PAUSE ALL ROLL & TIMERS
+    if (!isActiveTab || winner || isRolling || isMovingRef.current) return;
+
     const activeP = players[currentTurnIdx];
+
     if (activeP && activeP.isBot) {
       setCommentary(`🤖 ${activeP.name} is thinking & rolling...`);
       const timer = setTimeout(() => {
@@ -225,9 +235,23 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
       }, 1000);
       return () => clearTimeout(timer);
     } else if (activeP && !activeP.isBot) {
-      setCommentary(`🎲 Your turn, ${activeP.name}! Tap 3D Dice or click ROLL DICE.`);
+      setCommentary(`🎲 Your turn, ${activeP.name}! Tap 3D Dice or wait for auto-roll.`);
+
+      // 15-Second Turn Limit Countdown Timer for Human Player
+      const timerInterval = setInterval(() => {
+        setTurnTimerSeconds((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerInterval);
+            handleRollDice(); // Auto-roll if human takes too long
+            return 15;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timerInterval);
     }
-  }, [currentTurnIdx, players, isRolling, winner, handleRollDice]);
+  }, [currentTurnIdx, players, isRolling, winner, isActiveTab, handleRollDice]);
 
   const getCellNumber = (rowIdx: number, colIdx: number) => {
     const rowFromBottom = 9 - rowIdx;
@@ -250,16 +274,24 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
             <h1 className="text-lg font-black text-white flex items-center gap-2">
               <span>{t('game_snakes', language)}</span>
               <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold">
-                ISOMETRIC 3D ARENA
+                REALISTIC 3D ANACONDA ARENA
               </span>
             </h1>
             <p className="text-xs text-slate-400 font-medium">
-              Real 3D Isometric Island • Interactive 3D Dice • Animated 3D Snakes & Ladders
+              3D Anaconda Skin & Head Graphics • 15s Auto-Roll Timer • Active-Tab Pause Guard
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Turn Countdown Badge */}
+          {!currentPlayer.isBot && !winner && (
+            <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 shadow-md">
+              <Clock className="w-3.5 h-3.5 animate-spin" />
+              <span>AUTO-ROLL IN {turnTimerSeconds}s</span>
+            </div>
+          )}
+
           <button
             onClick={() => setIs3DView((v) => !v)}
             className="px-3 py-2 rounded-xl bg-indigo-900/60 hover:bg-indigo-800 text-indigo-300 text-xs font-bold flex items-center gap-1.5 border border-indigo-500/40 transition cursor-pointer"
@@ -280,7 +312,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
 
       {/* Main Game Arena Layout */}
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left Side: 10x10 Isometric 3D Board Grid with SVG Snake & Ladder Overlay */}
+        {/* Left Side: 10x10 Board Grid with SVG Realistic 3D Anaconda Overlay */}
         <div className="lg:col-span-8 flex flex-col items-center justify-center w-full">
           <div
             className={`relative w-full aspect-square bg-gradient-to-br from-emerald-950 via-slate-950 to-teal-950 p-2 sm:p-4 rounded-3xl border-4 border-emerald-600/40 shadow-2xl overflow-hidden transition-all duration-700 ${
@@ -292,38 +324,43 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
                 is3DView ? 'transform rotate-x-12 scale-95 shadow-[0_30px_60px_rgba(0,0,0,0.8)]' : ''
               }`}
             >
-              {/* SVG Connecting Overlay for 3D Snakes and Ladders */}
+              {/* SVG Connecting Overlay for Realistic 3D Anaconda & Ladders */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <defs>
+                  {/* Anaconda Olive Skin Pattern */}
+                  <pattern id="anacondaSkin" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="8" height="8" fill="#1b3815" />
+                    <circle cx="4" cy="4" r="2.5" fill="#0b1a08" />
+                    <circle cx="4" cy="4" r="1.5" fill="#3f6212" opacity="0.6" />
+                    <circle cx="8" cy="8" r="1.8" fill="#d97706" opacity="0.4" />
+                  </pattern>
+
+                  {/* Python Crimson Skin Pattern */}
+                  <pattern id="pythonSkin" width="8" height="8" patternUnits="userSpaceOnUse">
+                    <rect width="8" height="8" fill="#881337" />
+                    <polygon points="4,1 7,4 4,7 1,4" fill="#450a0a" />
+                    <circle cx="4" cy="4" r="1.2" fill="#ea580c" opacity="0.7" />
+                  </pattern>
+
+                  {/* Metallic Wooden Ladder Gradient */}
                   <linearGradient id="ladderGrad" x1="0%" y1="100%" x2="0%" y2="0%">
                     <stop offset="0%" stopColor="#f59e0b" />
                     <stop offset="100%" stopColor="#fef08a" />
                   </linearGradient>
-                  <linearGradient id="snakeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#ef4444" />
-                    <stop offset="100%" stopColor="#881337" />
-                  </linearGradient>
-                  <linearGradient id="snakeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#064e3b" />
-                  </linearGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="1" result="coloredBlur" />
-                    <feMerge>
-                      <feMergeNode in="coloredBlur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
+
+                  <filter id="anacondaShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="2" dy="4" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.7" />
                   </filter>
                 </defs>
 
-                {/* Render Connecting Lines for 3D Snakes & Ladders */}
+                {/* Render 3D Ladders & Realistic Anaconda Snakes */}
                 {SNAKES_AND_LADDERS_DATA.map((item, idx) => {
                   const start = getSquareCenterPercent(item.from);
                   const end = getSquareCenterPercent(item.to);
 
                   if (item.type === 'ladder') {
                     return (
-                      <g key={`ladder_${idx}`}>
+                      <g key={`ladder_${idx}`} filter="url(#anacondaShadow)">
                         <line
                           x1={start.x - 1.5}
                           y1={start.y}
@@ -332,7 +369,6 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
                           stroke="url(#ladderGrad)"
                           strokeWidth="1.5"
                           strokeLinecap="round"
-                          filter="url(#glow)"
                         />
                         <line
                           x1={start.x + 1.5}
@@ -342,7 +378,6 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
                           stroke="url(#ladderGrad)"
                           strokeWidth="1.5"
                           strokeLinecap="round"
-                          filter="url(#glow)"
                         />
                         {Array.from({ length: 6 }).map((_, rStep) => {
                           const tStep = (rStep + 1) / 7;
@@ -365,21 +400,56 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
                       </g>
                     );
                   } else {
-                    const midX = (start.x + end.x) / 2 + (idx % 2 === 0 ? 10 : -10);
+                    // Realistic 3D Anaconda Wavy Body Curve & Head
+                    const midX = (start.x + end.x) / 2 + (idx % 2 === 0 ? 12 : -12);
                     const midY = (start.y + end.y) / 2;
                     const pathData = `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
+                    const skinUrl = item.snakeType === 'python' ? 'url(#pythonSkin)' : 'url(#anacondaSkin)';
 
                     return (
-                      <g key={`snake_${idx}`}>
+                      <g key={`snake_${idx}`} filter="url(#anacondaShadow)">
+                        {/* Under-body Shadow Trail */}
                         <path
                           d={pathData}
                           fill="none"
-                          stroke={idx % 2 === 0 ? "url(#snakeGrad1)" : "url(#snakeGrad2)"}
-                          strokeWidth="3.5"
+                          stroke="#000000"
+                          strokeWidth="4.5"
                           strokeLinecap="round"
-                          filter="url(#glow)"
+                          opacity="0.5"
                         />
-                        <circle cx={start.x} cy={start.y} r="2.5" fill="#ef4444" stroke="#ffffff" strokeWidth="0.8" />
+                        {/* Anaconda Main 3D Patterned Body */}
+                        <path
+                          d={pathData}
+                          fill="none"
+                          stroke={skinUrl}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                        />
+                        {/* Highlights Streak */}
+                        <path
+                          d={pathData}
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="1"
+                          strokeLinecap="round"
+                        />
+
+                        {/* Realistic 3D Anaconda Triangular Head */}
+                        <g transform={`translate(${start.x}, ${start.y})`}>
+                          <path
+                            d="M 0,-3.5 L 3.5,2 L -3.5,2 Z"
+                            fill={item.snakeType === 'python' ? '#881337' : '#1b3815'}
+                            stroke="#000000"
+                            strokeWidth="0.5"
+                          />
+                          {/* Anaconda Eyes with Pupil */}
+                          <circle cx="-1.5" cy="-0.5" r="0.8" fill="#facc15" />
+                          <circle cx="1.5" cy="-0.5" r="0.8" fill="#facc15" />
+                          <line x1="-1.5" y1="-1.1" x2="-1.5" y2="0.1" stroke="#000" strokeWidth="0.4" />
+                          <line x1="1.5" y1="-1.1" x2="1.5" y2="0.1" stroke="#000" strokeWidth="0.4" />
+                          {/* Red Flicking Tongue */}
+                          <path d="M 0,-3.5 L 0,-5.5 M 0,-5.5 L -1,-7 M 0,-5.5 L 1,-7" stroke="#ef4444" strokeWidth="0.6" fill="none" />
+                        </g>
                       </g>
                     );
                   }
@@ -437,7 +507,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
                         {snakeFeature && (
                           <span
                             className="text-[8px] sm:text-[10px] text-rose-200 font-black bg-rose-950/90 border border-rose-400 px-1 rounded animate-pulse z-20 shadow-md"
-                            title={`Snake Slithers Down to Square ${snakeFeature.to}`}
+                            title={`Anaconda Slithers Down to Square ${snakeFeature.to}`}
                           >
                             🐍 ➔ {snakeFeature.to}
                           </span>

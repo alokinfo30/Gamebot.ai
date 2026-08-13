@@ -268,54 +268,121 @@ export const SnookerGame: React.FC<SnookerGameProps> = ({
         }
       }
 
-      // 4. Render Balls
+      // 4. Render Balls with 3D Sphere Gradients & Drop Shadows
       ballsRef.current.forEach((ball) => {
         if (ball.isPocketed) return;
 
+        // 3D Floor Shadow under ball
+        ctx.beginPath();
+        ctx.ellipse(ball.x + 2, ball.y + 3, ball.radius * 0.9, ball.radius * 0.4, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.fill();
+
+        // 3D Radial Sphere Fill
+        const grad = ctx.createRadialGradient(
+          ball.x - ball.radius * 0.35,
+          ball.y - ball.radius * 0.35,
+          ball.radius * 0.1,
+          ball.x,
+          ball.y,
+          ball.radius
+        );
+        if (ball.type === 'cue') {
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.7, '#f1f5f9');
+          grad.addColorStop(1, '#94a3b8');
+        } else if (ball.type === 'red') {
+          grad.addColorStop(0, '#f87171');
+          grad.addColorStop(0.6, '#dc2626');
+          grad.addColorStop(1, '#7f1d1d');
+        } else if (ball.type === 'yellow') {
+          grad.addColorStop(0, '#fef08a');
+          grad.addColorStop(0.6, '#eab308');
+          grad.addColorStop(1, '#713f12');
+        } else if (ball.type === 'green') {
+          grad.addColorStop(0, '#4ade80');
+          grad.addColorStop(0.6, '#16a34a');
+          grad.addColorStop(1, '#064e3b');
+        } else if (ball.type === 'brown') {
+          grad.addColorStop(0, '#d97706');
+          grad.addColorStop(0.6, '#92400e');
+          grad.addColorStop(1, '#451a03');
+        } else if (ball.type === 'blue') {
+          grad.addColorStop(0, '#60a5fa');
+          grad.addColorStop(0.6, '#2563eb');
+          grad.addColorStop(1, '#1e3a8a');
+        } else if (ball.type === 'pink') {
+          grad.addColorStop(0, '#f472b6');
+          grad.addColorStop(0.6, '#db2777');
+          grad.addColorStop(1, '#831843');
+        } else {
+          // Black 8-Ball
+          grad.addColorStop(0, '#475569');
+          grad.addColorStop(0.6, '#0f172a');
+          grad.addColorStop(1, '#020617');
+        }
+
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-        ctx.fillStyle = ball.color;
+        ctx.fillStyle = grad;
         ctx.fill();
 
-        // Shiny ball reflection highlight
+        // 8-Ball / Number Badges for colored balls
+        if (ball.type === 'black') {
+          ctx.beginPath();
+          ctx.arc(ball.x, ball.y, ball.radius * 0.4, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 7px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('8', ball.x, ball.y + 0.5);
+        }
+
+        // Specular Top Gloss Spot
         ctx.beginPath();
-        ctx.arc(ball.x - ball.radius * 0.3, ball.y - ball.radius * 0.3, ball.radius * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.arc(ball.x - ball.radius * 0.35, ball.y - ball.radius * 0.35, ball.radius * 0.25, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
         ctx.fill();
-
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 1;
-        ctx.stroke();
       });
 
-      // 5. Render Cue & Aim Line if Player turn
+      // 5. Render Cue Stick & Trajectory Aim Line
       const cueBall = ballsRef.current.find((b) => b.type === 'cue' && !b.isPocketed);
       if (cueBall && !isSimulating && currentTurn === 'player') {
-        const aimLen = 40 + (shotPower / 100) * 80;
+        const aimLen = 80 + (shotPower / 100) * 120;
         const endX = cueBall.x + Math.cos(aimAngle) * aimLen;
         const endY = cueBall.y + Math.sin(aimAngle) * aimLen;
 
+        // Dotted Trajectory Aim Line
         ctx.beginPath();
         ctx.moveTo(cueBall.x, cueBall.y);
         ctx.lineTo(endX, endY);
         ctx.strokeStyle = '#facc15';
         ctx.lineWidth = 2.5;
-        ctx.setLineDash([4, 4]);
+        ctx.setLineDash([5, 5]);
         ctx.stroke();
         ctx.setLineDash([]);
 
+        // Target Ghost Circle at end of aim line
+        ctx.beginPath();
+        ctx.arc(endX, endY, cueBall.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
         // Cue Stick behind ball
-        const stickLen = 100;
-        const stickStartX = cueBall.x - Math.cos(aimAngle) * (cueBall.radius + 10);
-        const stickStartY = cueBall.y - Math.sin(aimAngle) * (cueBall.radius + 10);
+        const stickLen = 120;
+        const stickStartX = cueBall.x - Math.cos(aimAngle) * (cueBall.radius + 12);
+        const stickStartY = cueBall.y - Math.sin(aimAngle) * (cueBall.radius + 12);
         const stickEndX = stickStartX - Math.cos(aimAngle) * stickLen;
         const stickEndY = stickStartY - Math.sin(aimAngle) * stickLen;
 
         ctx.beginPath();
         ctx.moveTo(stickStartX, stickStartY);
         ctx.lineTo(stickEndX, stickEndY);
-        ctx.strokeStyle = '#d97706'; // wood cue stick
-        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 6;
         ctx.stroke();
       }
 

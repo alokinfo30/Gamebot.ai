@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { RotateCcw, Volume2, VolumeX, Sparkles, Trophy, Bot, Play, ShieldAlert, Award } from 'lucide-react';
+import { RotateCcw, Volume2, VolumeX, Sparkles, Trophy, Bot, Play, ShieldAlert, Award, Eye } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
-import { LanguageCode, t, getSpeechLang } from '../logic/i18n';
+import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 import { Dice } from './Dice';
 import { ClassicLudo3DPawn } from './ClassicLudo3DPawn';
@@ -61,9 +61,6 @@ const PLAYER_COLORS_MAP: Record<PlayerColor, { bg: string; border: string; text:
   blue: { bg: 'bg-blue-500', border: 'border-blue-400', text: 'text-blue-400', hex: '#3b82f6' },
 };
 
-/**
- * Calculates board cell center position in percentage (0% to 100%) for tile 1..100
- */
 function getSquareCenterPercent(num: number): { x: number; y: number } {
   const rowFromBottom = Math.floor((num - 1) / 10); // 0 (bottom) to 9 (top)
   const colFromLeft = rowFromBottom % 2 === 0 ? (num - 1) % 10 : 9 - ((num - 1) % 10);
@@ -92,31 +89,18 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
     ];
   });
 
-  const [currentTurnIdx, setCurrentTurnIdx] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem('snakes_game_turn');
-      if (saved) return Number(saved);
-    } catch (e) {}
-    return 0;
-  });
-
+  const [currentTurnIdx, setCurrentTurnIdx] = useState<number>(0);
   const [diceValue, setDiceValue] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState<boolean>(false);
   const [winner, setWinner] = useState<SnakesPlayer | null>(null);
+  const [is3DView, setIs3DView] = useState<boolean>(true);
   const [commentary, setCommentary] = useState<string | null>(
     t('your_turn', language) + ' 🎲 ' + t('roll_dice', language)
   );
 
   const isMovingRef = useRef<boolean>(false);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('snakes_game_players', JSON.stringify(players));
-      localStorage.setItem('snakes_game_turn', String(currentTurnIdx));
-    } catch (e) {}
-  }, [players, currentTurnIdx]);
-
-  const currentPlayer = players[currentTurnIdx];
+  const currentPlayer = players[currentTurnIdx] || players[0];
 
   const handleResetGame = () => {
     soundManager.playDiceRoll();
@@ -130,32 +114,11 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
     setCurrentTurnIdx(0);
     setDiceValue(null);
     setWinner(null);
+    isMovingRef.current = false;
     setCommentary(t('your_turn', language) + ' 🎲 ' + t('roll_dice', language));
   };
 
-  const handleRollDice = useCallback(async () => {
-    if (isRolling || isMovingRef.current || winner) return;
-    const activeP = players[currentTurnIdx];
-    if (activeP && activeP.isBot && !isRolling) return;
-
-    setIsRolling(true);
-    soundManager.playDiceRoll();
-
-    let count = 0;
-    const interval = setInterval(() => {
-      setDiceValue(Math.floor(Math.random() * 6) + 1);
-      count++;
-      if (count > 8) {
-        clearInterval(interval);
-        const finalRoll = Math.floor(Math.random() * 6) + 1;
-        setDiceValue(finalRoll);
-        setIsRolling(false);
-        executeMove(finalRoll);
-      }
-    }, 70);
-  }, [isRolling, winner, players, currentTurnIdx, language]);
-
-  const executeMove = (roll: number) => {
+  const executeMove = useCallback((roll: number) => {
     isMovingRef.current = true;
     const player = players[currentTurnIdx];
     let startPos = player.position;
@@ -218,9 +181,6 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
           if (roll === 6) {
             setCommentary(`🎲 ROLLED A 6! ${player.name} gets another turn!`);
             isMovingRef.current = false;
-            if (player.isBot) {
-              setTimeout(() => handleRollDice(), 1200);
-            }
           } else {
             isMovingRef.current = false;
             nextTurn();
@@ -228,22 +188,46 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
         }, 400);
       }
     }, 150);
-  };
+  }, [players, currentTurnIdx, onDeclareWinner]);
 
-  const nextTurn = () => {
-    const nextIdx = (currentTurnIdx + 1) % players.length;
-    setCurrentTurnIdx(nextIdx);
-    const nextPlayer = players[nextIdx];
+  const handleRollDice = useCallback(() => {
+    if (isRolling || isMovingRef.current || winner) return;
 
-    if (nextPlayer.isBot) {
-      setCommentary(`🤖 ${nextPlayer.name} is thinking & rolling...`);
-      setTimeout(() => {
+    setIsRolling(true);
+    soundManager.playDiceRoll();
+
+    let count = 0;
+    const interval = setInterval(() => {
+      setDiceValue(Math.floor(Math.random() * 6) + 1);
+      count++;
+      if (count > 8) {
+        clearInterval(interval);
+        const finalRoll = Math.floor(Math.random() * 6) + 1;
+        setDiceValue(finalRoll);
+        setIsRolling(false);
+        executeMove(finalRoll);
+      }
+    }, 70);
+  }, [isRolling, winner, executeMove]);
+
+  const nextTurn = useCallback(() => {
+    setCurrentTurnIdx((prev) => (prev + 1) % players.length);
+  }, [players.length]);
+
+  // Automated AI Turn Loop Effect
+  useEffect(() => {
+    if (winner || isRolling || isMovingRef.current) return;
+    const activeP = players[currentTurnIdx];
+    if (activeP && activeP.isBot) {
+      setCommentary(`🤖 ${activeP.name} is thinking & rolling...`);
+      const timer = setTimeout(() => {
         handleRollDice();
-      }, 1200);
-    } else {
-      setCommentary(`🎲 Your turn, ${nextPlayer.name}! Tap 3D Dice to roll.`);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (activeP && !activeP.isBot) {
+      setCommentary(`🎲 Your turn, ${activeP.name}! Tap 3D Dice or click ROLL DICE.`);
     }
-  };
+  }, [currentTurnIdx, players, isRolling, winner, handleRollDice]);
 
   const getCellNumber = (rowIdx: number, colIdx: number) => {
     const rowFromBottom = 9 - rowIdx;
@@ -266,16 +250,24 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
             <h1 className="text-lg font-black text-white flex items-center gap-2">
               <span>{t('game_snakes', language)}</span>
               <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold">
-                100 TILE ARENA
+                ISOMETRIC 3D ARENA
               </span>
             </h1>
             <p className="text-xs text-slate-400 font-medium">
-              3D Interactive Dice • Animated Snakes & Ladders Overlay • Voice Commentary
+              Real 3D Isometric Island • Interactive 3D Dice • Animated 3D Snakes & Ladders
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIs3DView((v) => !v)}
+            className="px-3 py-2 rounded-xl bg-indigo-900/60 hover:bg-indigo-800 text-indigo-300 text-xs font-bold flex items-center gap-1.5 border border-indigo-500/40 transition cursor-pointer"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>{is3DView ? '🧊 3D View' : '📐 Flat View'}</span>
+          </button>
+
           <button
             onClick={handleResetGame}
             className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
@@ -288,179 +280,188 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
 
       {/* Main Game Arena Layout */}
       <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left Side: 10x10 Board Grid with SVG Snake & Ladder Overlay */}
+        {/* Left Side: 10x10 Isometric 3D Board Grid with SVG Snake & Ladder Overlay */}
         <div className="lg:col-span-8 flex flex-col items-center justify-center w-full">
-          <div className="relative w-full aspect-square bg-slate-950 p-2 sm:p-4 rounded-3xl border-4 border-slate-800 shadow-2xl overflow-hidden">
-            
-            {/* SVG Connecting Overlay for Snakes and Ladders */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="ladderGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#fef08a" />
-                </linearGradient>
-                <linearGradient id="snakeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#881337" />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="1" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
+          <div
+            className={`relative w-full aspect-square bg-gradient-to-br from-emerald-950 via-slate-950 to-teal-950 p-2 sm:p-4 rounded-3xl border-4 border-emerald-600/40 shadow-2xl overflow-hidden transition-all duration-700 ${
+              is3DView ? 'perspective-1000' : ''
+            }`}
+          >
+            <div
+              className={`w-full h-full transition-transform duration-700 ${
+                is3DView ? 'transform rotate-x-12 scale-95 shadow-[0_30px_60px_rgba(0,0,0,0.8)]' : ''
+              }`}
+            >
+              {/* SVG Connecting Overlay for 3D Snakes and Ladders */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none z-20" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="ladderGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#fef08a" />
+                  </linearGradient>
+                  <linearGradient id="snakeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#881337" />
+                  </linearGradient>
+                  <linearGradient id="snakeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#064e3b" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="1" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
 
-              {/* Render Connecting Lines for Snakes & Ladders */}
-              {SNAKES_AND_LADDERS_DATA.map((item, idx) => {
-                const start = getSquareCenterPercent(item.from);
-                const end = getSquareCenterPercent(item.to);
+                {/* Render Connecting Lines for 3D Snakes & Ladders */}
+                {SNAKES_AND_LADDERS_DATA.map((item, idx) => {
+                  const start = getSquareCenterPercent(item.from);
+                  const end = getSquareCenterPercent(item.to);
 
-                if (item.type === 'ladder') {
-                  return (
-                    <g key={`ladder_${idx}`}>
-                      {/* Ladder Main Rails */}
-                      <line
-                        x1={start.x - 1.2}
-                        y1={start.y}
-                        x2={end.x - 1.2}
-                        y2={end.y}
-                        stroke="url(#ladderGrad)"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        filter="url(#glow)"
-                      />
-                      <line
-                        x1={start.x + 1.2}
-                        y1={start.y}
-                        x2={end.x + 1.2}
-                        y2={end.y}
-                        stroke="url(#ladderGrad)"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        filter="url(#glow)"
-                      />
-                      {/* Ladder Rungs */}
-                      {Array.from({ length: 5 }).map((_, rStep) => {
-                        const tStep = (rStep + 1) / 6;
-                        const rx1 = (start.x - 1.2) * (1 - tStep) + (end.x - 1.2) * tStep;
-                        const ry1 = start.y * (1 - tStep) + end.y * tStep;
-                        const rx2 = (start.x + 1.2) * (1 - tStep) + (end.x + 1.2) * tStep;
-                        const ry2 = start.y * (1 - tStep) + end.y * tStep;
-                        return (
-                          <line
-                            key={`rung_${rStep}`}
-                            x1={rx1}
-                            y1={ry1}
-                            x2={rx2}
-                            y2={ry2}
-                            stroke="#fef08a"
-                            strokeWidth="0.8"
-                          />
-                        );
-                      })}
-                    </g>
-                  );
-                } else {
-                  // Snake Wavy Path
-                  const midX = (start.x + end.x) / 2 + (idx % 2 === 0 ? 8 : -8);
-                  const midY = (start.y + end.y) / 2;
-                  const pathData = `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
+                  if (item.type === 'ladder') {
+                    return (
+                      <g key={`ladder_${idx}`}>
+                        <line
+                          x1={start.x - 1.5}
+                          y1={start.y}
+                          x2={end.x - 1.5}
+                          y2={end.y}
+                          stroke="url(#ladderGrad)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          filter="url(#glow)"
+                        />
+                        <line
+                          x1={start.x + 1.5}
+                          y1={start.y}
+                          x2={end.x + 1.5}
+                          y2={end.y}
+                          stroke="url(#ladderGrad)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          filter="url(#glow)"
+                        />
+                        {Array.from({ length: 6 }).map((_, rStep) => {
+                          const tStep = (rStep + 1) / 7;
+                          const rx1 = (start.x - 1.5) * (1 - tStep) + (end.x - 1.5) * tStep;
+                          const ry1 = start.y * (1 - tStep) + end.y * tStep;
+                          const rx2 = (start.x + 1.5) * (1 - tStep) + (end.x + 1.5) * tStep;
+                          const ry2 = start.y * (1 - tStep) + end.y * tStep;
+                          return (
+                            <line
+                              key={`rung_${rStep}`}
+                              x1={rx1}
+                              y1={ry1}
+                              x2={rx2}
+                              y2={ry2}
+                              stroke="#fef08a"
+                              strokeWidth="1"
+                            />
+                          );
+                        })}
+                      </g>
+                    );
+                  } else {
+                    const midX = (start.x + end.x) / 2 + (idx % 2 === 0 ? 10 : -10);
+                    const midY = (start.y + end.y) / 2;
+                    const pathData = `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
 
-                  return (
-                    <g key={`snake_${idx}`}>
-                      <path
-                        d={pathData}
-                        fill="none"
-                        stroke="url(#snakeGrad)"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        filter="url(#glow)"
-                      />
-                      {/* Snake Head Dot */}
-                      <circle cx={start.x} cy={start.y} r="2" fill="#ef4444" stroke="#ffffff" strokeWidth="0.5" />
-                    </g>
-                  );
-                }
-              })}
-            </svg>
+                    return (
+                      <g key={`snake_${idx}`}>
+                        <path
+                          d={pathData}
+                          fill="none"
+                          stroke={idx % 2 === 0 ? "url(#snakeGrad1)" : "url(#snakeGrad2)"}
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          filter="url(#glow)"
+                        />
+                        <circle cx={start.x} cy={start.y} r="2.5" fill="#ef4444" stroke="#ffffff" strokeWidth="0.8" />
+                      </g>
+                    );
+                  }
+                })}
+              </svg>
 
-            {/* Grid Cells */}
-            <div className="grid grid-cols-10 grid-rows-10 w-full h-full gap-0.5 sm:gap-1 bg-slate-900/60 rounded-xl p-1 relative z-10">
-              {Array.from({ length: 10 }).map((_, rIdx) =>
-                Array.from({ length: 10 }).map((_, cIdx) => {
-                  const num = getCellNumber(rIdx, cIdx);
-                  const ladderFeature = SNAKES_AND_LADDERS_DATA.find(
-                    (item) => item.from === num && item.type === 'ladder'
-                  );
-                  const snakeFeature = SNAKES_AND_LADDERS_DATA.find(
-                    (item) => item.from === num && item.type === 'snake'
-                  );
+              {/* Grid Cells */}
+              <div className="grid grid-cols-10 grid-rows-10 w-full h-full gap-0.5 sm:gap-1 bg-emerald-950/80 rounded-xl p-1 relative z-10">
+                {Array.from({ length: 10 }).map((_, rIdx) =>
+                  Array.from({ length: 10 }).map((_, cIdx) => {
+                    const num = getCellNumber(rIdx, cIdx);
+                    const ladderFeature = SNAKES_AND_LADDERS_DATA.find(
+                      (item) => item.from === num && item.type === 'ladder'
+                    );
+                    const snakeFeature = SNAKES_AND_LADDERS_DATA.find(
+                      (item) => item.from === num && item.type === 'snake'
+                    );
 
-                  const isEvenCell = num % 2 === 0;
-                  const bgClass =
-                    num === 100
-                      ? 'bg-gradient-to-br from-amber-500/40 to-yellow-600/40 border-amber-400/80'
-                      : isEvenCell
-                      ? 'bg-slate-900/90 border-slate-800/80'
-                      : 'bg-slate-800/80 border-slate-700/60';
+                    const isEvenCell = num % 2 === 0;
+                    const bgClass =
+                      num === 100
+                        ? 'bg-gradient-to-br from-amber-500/50 to-yellow-600/50 border-amber-400/90'
+                        : isEvenCell
+                        ? 'bg-emerald-950/90 border-emerald-800/80'
+                        : 'bg-emerald-900/80 border-emerald-700/60';
 
-                  const occupantPlayers = players.filter((p) => p.position === num);
+                    const occupantPlayers = players.filter((p) => p.position === num);
 
-                  return (
-                    <div
-                      key={`square-${num}`}
-                      className={`relative flex flex-col items-center justify-between p-0.5 sm:p-1 rounded border text-[9px] sm:text-[11px] font-mono font-extrabold ${bgClass} transition-all`}
-                    >
-                      <span
-                        className={`${
-                          num === 100
-                            ? 'text-amber-300 font-black scale-110'
-                            : occupantPlayers.length > 0
-                            ? 'text-blue-300 font-black'
-                            : 'text-slate-400'
-                        }`}
+                    return (
+                      <div
+                        key={`square-${num}`}
+                        className={`relative flex flex-col items-center justify-between p-0.5 sm:p-1 rounded border text-[9px] sm:text-[11px] font-mono font-extrabold ${bgClass} transition-all`}
                       >
-                        {num === 100 ? '100 🏆' : num}
-                      </span>
-
-                      {/* Explicit Destination Badge for Ladders & Snakes */}
-                      {ladderFeature && (
                         <span
-                          className="text-[8px] sm:text-[10px] text-emerald-300 font-black bg-emerald-950/80 border border-emerald-500/60 px-1 rounded animate-bounce z-20"
-                          title={`Ladder Climbs Up to Square ${ladderFeature.to}`}
+                          className={`${
+                            num === 100
+                              ? 'text-amber-300 font-black scale-110'
+                              : occupantPlayers.length > 0
+                              ? 'text-blue-300 font-black'
+                              : 'text-emerald-300/80'
+                          }`}
                         >
-                          🪜 ➔ {ladderFeature.to}
+                          {num === 100 ? '100 🏆' : num}
                         </span>
-                      )}
-                      {snakeFeature && (
-                        <span
-                          className="text-[8px] sm:text-[10px] text-rose-300 font-black bg-rose-950/80 border border-rose-500/60 px-1 rounded animate-pulse z-20"
-                          title={`Snake Slithers Down to Square ${snakeFeature.to}`}
-                        >
-                          🐍 ➔ {snakeFeature.to}
-                        </span>
-                      )}
 
-                      {/* Player 3D Pawns Stacked */}
-                      <div className="flex flex-wrap items-center justify-center gap-0.5 max-w-full z-30">
-                        {occupantPlayers.map((p) => (
-                          <motion.div
-                            key={p.id}
-                            layout
-                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                            className="w-5 h-5 sm:w-6 sm:h-6"
-                            title={p.name}
+                        {/* Explicit Destination Badges */}
+                        {ladderFeature && (
+                          <span
+                            className="text-[8px] sm:text-[10px] text-emerald-200 font-black bg-emerald-950/90 border border-emerald-400 px-1 rounded animate-bounce z-20 shadow-md"
+                            title={`Ladder Climbs Up to Square ${ladderFeature.to}`}
                           >
-                            <ClassicLudo3DPawn color={p.color} tokenId={0} isMovable={false} />
-                          </motion.div>
-                        ))}
+                            🪜 ➔ {ladderFeature.to}
+                          </span>
+                        )}
+                        {snakeFeature && (
+                          <span
+                            className="text-[8px] sm:text-[10px] text-rose-200 font-black bg-rose-950/90 border border-rose-400 px-1 rounded animate-pulse z-20 shadow-md"
+                            title={`Snake Slithers Down to Square ${snakeFeature.to}`}
+                          >
+                            🐍 ➔ {snakeFeature.to}
+                          </span>
+                        )}
+
+                        {/* Player 3D Pawns */}
+                        <div className="flex flex-wrap items-center justify-center gap-0.5 max-w-full z-30">
+                          {occupantPlayers.map((p) => (
+                            <motion.div
+                              key={p.id}
+                              layout
+                              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                              className="w-5 h-5 sm:w-6 sm:h-6"
+                              title={p.name}
+                            >
+                              <ClassicLudo3DPawn color={p.color} tokenId={0} isMovable={false} />
+                            </motion.div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -516,16 +517,25 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
               })}
             </div>
 
-            {/* Interactive Real 3D Dice Component */}
+            {/* Interactive Real 3D Dice Component & Roll Button */}
             {!winner && (
-              <div className="pt-2 flex flex-col items-center justify-center bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+              <div className="pt-2 flex flex-col items-center justify-center bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3">
                 <Dice
                   value={diceValue}
                   onRoll={handleRollDice}
-                  disabled={currentPlayer?.isBot || isRolling || isMovingRef.current}
+                  disabled={isRolling || isMovingRef.current}
                   currentColor={currentPlayer?.color || 'red'}
                   hasRolled={isRolling}
                 />
+
+                <button
+                  onClick={handleRollDice}
+                  disabled={isRolling || isMovingRef.current}
+                  className="w-full py-3 px-4 rounded-xl font-black text-xs sm:text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <span>🎲</span>
+                  <span>{isRolling ? 'Rolling...' : `ROLL DICE (${currentPlayer?.name})`}</span>
+                </button>
               </div>
             )}
 

@@ -83,6 +83,15 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
   onDeclareWinner,
 }) => {
   const [players, setPlayers] = useState<SnakesPlayer[]>(() => {
+    try {
+      const saved = localStorage.getItem('snakes_game_players');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
     const isPass = playMode === 'pass_and_play';
     return [
       { id: 'p1', name: 'Player 1 (Red)', color: 'red', position: 1, isBot: false, score: 0 },
@@ -92,7 +101,16 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
     ];
   });
 
-  const [currentTurnIdx, setCurrentTurnIdx] = useState<number>(0);
+  const [currentTurnIdx, setCurrentTurnIdx] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('snakes_game_turn');
+      if (saved !== null) {
+        const idx = Number(saved);
+        if (!isNaN(idx) && idx >= 0 && idx < 4) return idx;
+      }
+    } catch (e) {}
+    return 0;
+  });
   const [diceValue, setDiceValue] = useState<number | null>(null);
   const [isRolling, setIsRolling] = useState<boolean>(false);
   const [winner, setWinner] = useState<SnakesPlayer | null>(null);
@@ -102,11 +120,23 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
     t('your_turn', language) + ' 🎲 ' + t('roll_dice', language)
   );
 
+  // PERSIST SNAKES & LADDERS MATCH STATE TO LOCALSTORAGE ON EVERY STEP & TURN CHANGE
+  useEffect(() => {
+    try {
+      localStorage.setItem('snakes_game_players', JSON.stringify(players));
+      localStorage.setItem('snakes_game_turn', String(currentTurnIdx));
+    } catch (e) {}
+  }, [players, currentTurnIdx]);
+
   const isMovingRef = useRef<boolean>(false);
   const currentPlayer = players[currentTurnIdx] || players[0];
 
   const handleResetGame = () => {
     soundManager.playDiceRoll();
+    try {
+      localStorage.removeItem('snakes_game_players');
+      localStorage.removeItem('snakes_game_turn');
+    } catch (e) {}
     const reset: SnakesPlayer[] = [
       { id: 'p1', name: 'You (Player 1)', color: 'red', position: 1, isBot: false, score: 0 },
       { id: 'p2', name: 'AI Champion Bot', color: 'green', position: 1, isBot: true, score: 0 },

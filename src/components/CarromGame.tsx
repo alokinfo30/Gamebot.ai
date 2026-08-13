@@ -51,9 +51,28 @@ export const CarromGame: React.FC<CarromGameProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const [playerScore, setPlayerScore] = useState<number>(0);
-  const [aiScore, setAiScore] = useState<number>(0);
+  const [playerScore, setPlayerScore] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('carrom_player_score');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 0;
+  });
+  const [aiScore, setAiScore] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('carrom_ai_score');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 0;
+  });
   const [currentTurn, setCurrentTurn] = useState<'player' | 'ai'>('player');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('carrom_player_score', String(playerScore));
+      localStorage.setItem('carrom_ai_score', String(aiScore));
+    } catch (e) {}
+  }, [playerScore, aiScore]);
   const [shotPower, setShotPower] = useState<number>(50); // 10 to 100
   const [aimAngle, setAimAngle] = useState<number>(-Math.PI / 2); // default points straight up
   const [strikerPosX, setStrikerPosX] = useState<number>(BOARD_SIZE / 2);

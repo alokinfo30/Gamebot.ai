@@ -44,9 +44,28 @@ export const SnookerGame: React.FC<SnookerGameProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const [playerScore, setPlayerScore] = useState<number>(0);
-  const [aiScore, setAiScore] = useState<number>(0);
+  const [playerScore, setPlayerScore] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('snooker_player_score');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 0;
+  });
+  const [aiScore, setAiScore] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('snooker_ai_score');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return 0;
+  });
   const [currentTurn, setCurrentTurn] = useState<'player' | 'ai'>('player');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('snooker_player_score', String(playerScore));
+      localStorage.setItem('snooker_ai_score', String(aiScore));
+    } catch (e) {}
+  }, [playerScore, aiScore]);
   const [shotPower, setShotPower] = useState<number>(50); // 10 to 100
   const [aimAngle, setAimAngle] = useState<number>(0); // radians, default points right
   const [isSimulating, setIsSimulating] = useState<boolean>(false);

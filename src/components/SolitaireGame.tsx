@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface SolitaireGameProps {
   language?: LanguageCode;
@@ -179,16 +180,36 @@ export const SolitaireGame: React.FC<SolitaireGameProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex gap-3">
                 {/* Stock Pile */}
-                <button
+                <div
                   onClick={handleStockClick}
-                  className="w-12 h-18 bg-slate-900 border-2 border-indigo-500/50 rounded-xl flex items-center justify-center text-slate-400 font-bold text-xs shadow-md cursor-pointer"
+                  className="cursor-pointer transition hover:scale-105"
                 >
-                  {stock.length > 0 ? '🂠' : '🔄'}
-                </button>
+                  <PlayingCard
+                    card={{
+                      suit: 'spades',
+                      rank: 'A',
+                      isFaceUp: false,
+                    }}
+                    size="sm"
+                  />
+                </div>
 
                 {/* Waste Pile */}
-                <div className="w-12 h-18 bg-white border-2 border-slate-300 rounded-xl flex items-center justify-center font-black text-xs text-slate-900 shadow-md">
-                  {waste.length > 0 ? getCardLabel(waste[waste.length - 1]) : 'Empty'}
+                <div>
+                  {waste.length > 0 ? (
+                    <PlayingCard
+                      card={{
+                        suit: waste[waste.length - 1].suit === '♠' ? 'spades' : waste[waste.length - 1].suit === '♥' ? 'hearts' : waste[waste.length - 1].suit === '♦' ? 'diamonds' : 'clubs',
+                        rank: waste[waste.length - 1].value === 1 ? 'A' : waste[waste.length - 1].value === 13 ? 'K' : waste[waste.length - 1].value === 12 ? 'Q' : waste[waste.length - 1].value === 11 ? 'J' : (waste[waste.length - 1].value.toString() as Rank),
+                        isFaceUp: true,
+                      }}
+                      size="sm"
+                    />
+                  ) : (
+                    <div className="w-11 h-16 bg-emerald-900/60 border border-dashed border-emerald-400/40 rounded-xl flex items-center justify-center text-xs text-emerald-300">
+                      Empty
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -211,16 +232,15 @@ export const SolitaireGame: React.FC<SolitaireGameProps> = ({
               {tableau.map((col, colIdx) => (
                 <div key={colIdx} className="flex flex-col items-center space-y-1 bg-slate-900/40 rounded-xl p-1 min-h-[160px]">
                   {col.map((card, rIdx) => (
-                    <div
+                    <PlayingCard
                       key={card.id}
-                      className={`w-9 h-14 sm:w-10 sm:h-15 rounded-lg border flex items-center justify-center font-bold text-[10px] sm:text-xs shadow ${
-                        card.isFaceUp
-                          ? 'bg-white text-slate-900 border-slate-300'
-                          : 'bg-slate-800 text-slate-600 border-slate-700'
-                      }`}
-                    >
-                      {card.isFaceUp ? getCardLabel(card) : '🂠'}
-                    </div>
+                      card={{
+                        suit: card.suit === '♠' ? 'spades' : card.suit === '♥' ? 'hearts' : card.suit === '♦' ? 'diamonds' : 'clubs',
+                        rank: card.value === 1 ? 'A' : card.value === 13 ? 'K' : card.value === 12 ? 'Q' : card.value === 11 ? 'J' : (card.value.toString() as Rank),
+                        isFaceUp: card.isFaceUp,
+                      }}
+                      size="sm"
+                    />
                   ))}
                   {col.length === 0 && (
                     <span className="text-[10px] text-slate-600 font-bold mt-2">K</span>

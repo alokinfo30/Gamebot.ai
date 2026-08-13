@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface BlackjackGameProps {
   language?: LanguageCode;
@@ -222,12 +223,15 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
               </span>
               <div className="flex justify-center gap-2">
                 {dealerCards.map((c, i) => (
-                  <div
+                  <PlayingCard
                     key={i}
-                    className="w-14 h-20 bg-white text-slate-900 border-2 border-amber-400 rounded-xl font-black text-base flex items-center justify-center shadow-lg"
-                  >
-                    {!gameOver && i === 1 ? '🂠' : getCardLabel(c)}
-                  </div>
+                    card={{
+                      suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                      rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                      isFaceUp: gameOver || i === 0,
+                    }}
+                    size="md"
+                  />
                 ))}
               </div>
             </div>
@@ -240,9 +244,15 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
 
               <div className="flex justify-center gap-2">
                 {playerCards.map((c, i) => (
-                  <div key={i} className="w-14 h-20 bg-white text-slate-900 border-2 border-amber-400 rounded-xl font-black text-base flex items-center justify-center shadow-xl">
-                    {getCardLabel(c)}
-                  </div>
+                  <PlayingCard
+                    key={i}
+                    card={{
+                      suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                      rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                      isFaceUp: true,
+                    }}
+                    size="md"
+                  />
                 ))}
               </div>
 

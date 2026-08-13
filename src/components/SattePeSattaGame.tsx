@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface SattePeSattaGameProps {
   language?: LanguageCode;
@@ -277,18 +278,18 @@ export const SattePeSattaGame: React.FC<SattePeSattaGameProps> = ({
                 {playerHand.map((card) => {
                   const playable = turn === 0 && isValidPlay(card);
                   return (
-                    <button
+                    <PlayingCard
                       key={card.id}
                       onClick={() => playable && playCard(card, 0)}
-                      disabled={!playable}
-                      className={`w-11 h-16 rounded-xl border-2 font-black text-xs flex flex-col items-center justify-center transition shadow cursor-pointer ${
-                        playable
-                          ? 'bg-amber-300 text-slate-900 border-amber-500 ring-2 ring-emerald-400 scale-105'
-                          : 'bg-slate-800 text-slate-500 border-slate-700 opacity-60'
-                      }`}
-                    >
-                      <span>{getCardLabel(card)}</span>
-                    </button>
+                      card={{
+                        suit: card.suit === '♠' ? 'spades' : card.suit === '♥' ? 'hearts' : card.suit === '♦' ? 'diamonds' : 'clubs',
+                        rank: card.value === 1 ? 'A' : card.value === 13 ? 'K' : card.value === 12 ? 'Q' : card.value === 11 ? 'J' : (card.value.toString() as Rank),
+                        isFaceUp: true,
+                        isSelected: playable,
+                        isDisabled: !playable,
+                      }}
+                      size="sm"
+                    />
                   );
                 })}
               </div>

@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface CoatPieceGameProps {
   language?: LanguageCode;
@@ -248,9 +249,14 @@ export const CoatPieceGame: React.FC<CoatPieceGameProps> = ({
                   <span className="text-[10px] text-slate-400 font-bold block">
                     P{play.playerIdx}
                   </span>
-                  <div className="w-12 h-18 bg-white text-slate-900 border-2 border-amber-400 rounded-xl font-black text-sm flex items-center justify-center shadow-lg">
-                    {getCardLabel(play.card)}
-                  </div>
+                  <PlayingCard
+                    card={{
+                      suit: play.card.suit === '♠' ? 'spades' : play.card.suit === '♥' ? 'hearts' : play.card.suit === '♦' ? 'diamonds' : 'clubs',
+                      rank: play.card.value === 14 ? 'A' : play.card.value === 13 ? 'K' : play.card.value === 12 ? 'Q' : play.card.value === 11 ? 'J' : (play.card.value.toString() as Rank),
+                      isFaceUp: true,
+                    }}
+                    size="sm"
+                  />
                 </div>
               ))}
               {currentTrick.length === 0 && (
@@ -269,18 +275,18 @@ export const CoatPieceGame: React.FC<CoatPieceGameProps> = ({
                 {playerHand.map((card) => {
                   const playable = turn === 0 && trumpSuit !== null;
                   return (
-                    <button
+                    <PlayingCard
                       key={card.id}
                       onClick={() => playable && playCard(card, 0)}
-                      disabled={!playable}
-                      className={`w-11 h-16 rounded-xl border-2 font-black text-xs flex items-center justify-center transition shadow cursor-pointer ${
-                        playable
-                          ? 'bg-amber-300 text-slate-900 border-amber-500 hover:-translate-y-1'
-                          : 'bg-slate-800 text-slate-500 border-slate-700 opacity-60'
-                      }`}
-                    >
-                      {getCardLabel(card)}
-                    </button>
+                      card={{
+                        suit: card.suit === '♠' ? 'spades' : card.suit === '♥' ? 'hearts' : card.suit === '♦' ? 'diamonds' : 'clubs',
+                        rank: card.value === 14 ? 'A' : card.value === 13 ? 'K' : card.value === 12 ? 'Q' : card.value === 11 ? 'J' : (card.value.toString() as Rank),
+                        isFaceUp: true,
+                        isSelected: playable,
+                        isDisabled: !playable,
+                      }}
+                      size="sm"
+                    />
                   );
                 })}
               </div>

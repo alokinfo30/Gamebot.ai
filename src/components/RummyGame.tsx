@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface RummyGameProps {
   language?: LanguageCode;
@@ -218,20 +219,27 @@ export const RummyGame: React.FC<RummyGameProps> = ({
               </button>
 
               {/* Open Discard Pile */}
-              <button
-                onClick={() => handleDrawCard('discard')}
-                disabled={turn !== 'player' || hasDrawn || discardPile.length === 0}
-                className="w-20 h-28 bg-white border-2 border-amber-400 rounded-2xl flex flex-col items-center justify-center font-black text-slate-900 shadow-xl hover:scale-105 transition cursor-pointer"
+              <div
+                onClick={() => turn === 'player' && !hasDrawn && discardPile.length > 0 && handleDrawCard('discard')}
+                className={`cursor-pointer transition hover:scale-105 ${
+                  turn !== 'player' || hasDrawn || discardPile.length === 0 ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
                 {discardPile.length > 0 ? (
-                  <>
-                    <span className="text-xl">{getCardLabel(discardPile[discardPile.length - 1])}</span>
-                    <span className="text-[9px] text-slate-500 mt-1 uppercase">OPEN PILE</span>
-                  </>
+                  <PlayingCard
+                    card={{
+                      suit: discardPile[discardPile.length - 1].suit === '♠' ? 'spades' : discardPile[discardPile.length - 1].suit === '♥' ? 'hearts' : discardPile[discardPile.length - 1].suit === '♦' ? 'diamonds' : 'clubs',
+                      rank: discardPile[discardPile.length - 1].value === 1 ? 'A' : discardPile[discardPile.length - 1].value === 13 ? 'K' : discardPile[discardPile.length - 1].value === 12 ? 'Q' : discardPile[discardPile.length - 1].value === 11 ? 'J' : (discardPile[discardPile.length - 1].value.toString() as Rank),
+                      isFaceUp: true,
+                    }}
+                    size="md"
+                  />
                 ) : (
-                  <span className="text-xs text-slate-400">Empty</span>
+                  <div className="w-16 h-24 sm:w-20 sm:h-28 bg-slate-900/60 border border-dashed border-slate-700 rounded-xl flex items-center justify-center text-slate-600 text-xs">
+                    Empty
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
 
             {/* Player Hand & Controls */}
@@ -268,17 +276,17 @@ export const RummyGame: React.FC<RummyGameProps> = ({
                 {playerHand.map((card) => {
                   const isSelected = card.id === selectedCardId;
                   return (
-                    <button
+                    <PlayingCard
                       key={card.id}
                       onClick={() => setSelectedCardId(card.id)}
-                      className={`w-11 h-16 sm:w-12 sm:h-18 rounded-xl border-2 font-black text-xs sm:text-sm flex flex-col items-center justify-center transition shadow-md cursor-pointer ${
-                        isSelected
-                          ? 'bg-amber-300 text-slate-900 border-amber-500 -translate-y-2'
-                          : 'bg-white text-slate-900 border-slate-300 hover:-translate-y-1'
-                      }`}
-                    >
-                      <span>{getCardLabel(card)}</span>
-                    </button>
+                      card={{
+                        suit: card.suit === '♠' ? 'spades' : card.suit === '♥' ? 'hearts' : card.suit === '♦' ? 'diamonds' : 'clubs',
+                        rank: card.value === 1 ? 'A' : card.value === 13 ? 'K' : card.value === 12 ? 'Q' : card.value === 11 ? 'J' : (card.value.toString() as Rank),
+                        isFaceUp: true,
+                        isSelected,
+                      }}
+                      size="sm"
+                    />
                   );
                 })}
               </div>

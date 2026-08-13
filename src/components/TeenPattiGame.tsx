@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface TeenPattiGameProps {
   language?: LanguageCode;
@@ -263,12 +264,15 @@ export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
                   <span className="text-xs font-black text-white block">{ai.name}</span>
                   <div className="flex justify-center gap-1">
                     {ai.cards.map((c, i) => (
-                      <div
+                      <PlayingCard
                         key={i}
-                        className="w-8 h-12 bg-slate-800 border border-slate-600 rounded-md flex items-center justify-center text-xs font-bold text-slate-400 shadow"
-                      >
-                        {gameOver ? getCardLabel(c) : '🂠'}
-                      </div>
+                        card={{
+                          suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                          rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                          isFaceUp: gameOver,
+                        }}
+                        size="sm"
+                      />
                     ))}
                   </div>
                   <span className="text-[10px] text-amber-400 font-mono font-bold block">
@@ -293,16 +297,15 @@ export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
 
               <div className="flex justify-center gap-2">
                 {player.cards.map((c, i) => (
-                  <div
+                  <PlayingCard
                     key={i}
-                    className={`w-14 h-20 rounded-xl border-2 flex flex-col items-center justify-center font-bold text-sm shadow-xl ${
-                      player.isSeen
-                        ? 'bg-white text-slate-900 border-amber-400'
-                        : 'bg-slate-800 text-slate-500 border-slate-700'
-                    }`}
-                  >
-                    {player.isSeen ? getCardLabel(c) : '🂠'}
-                  </div>
+                    card={{
+                      suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                      rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                      isFaceUp: player.isSeen,
+                    }}
+                    size="md"
+                  />
                 ))}
               </div>
 

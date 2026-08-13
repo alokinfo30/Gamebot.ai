@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface DonkeyGameProps {
   language?: LanguageCode;
@@ -194,17 +195,17 @@ export const DonkeyGame: React.FC<DonkeyGameProps> = ({
                 {playerHand.map((c) => {
                   const isSel = c.id === selectedCardId;
                   return (
-                    <button
+                    <PlayingCard
                       key={c.id}
                       onClick={() => setSelectedCardId(c.id)}
-                      className={`w-14 h-20 rounded-xl border-2 font-black text-sm flex items-center justify-center shadow-xl cursor-pointer ${
-                        isSel
-                          ? 'bg-amber-300 text-slate-900 border-amber-500 -translate-y-2'
-                          : 'bg-white text-slate-900 border-slate-300 hover:-translate-y-1'
-                      }`}
-                    >
-                      {getCardLabel(c)}
-                    </button>
+                      card={{
+                        suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                        rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                        isFaceUp: true,
+                        isSelected: isSel,
+                      }}
+                      size="md"
+                    />
                   );
                 })}
               </div>

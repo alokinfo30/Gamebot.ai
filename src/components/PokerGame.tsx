@@ -6,6 +6,7 @@ import { LanguageCode, t } from '../logic/i18n';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 import { GamePlayMode } from '../logic/multiplayerRoomManager';
+import { PlayingCard, Suit, Rank } from './PlayingCard';
 
 export interface PokerGameProps {
   language?: LanguageCode;
@@ -251,9 +252,15 @@ export const PokerGame: React.FC<PokerGameProps> = ({
                   <span className="text-xs font-bold text-white block">{ai.name}</span>
                   <div className="flex justify-center gap-1">
                     {ai.holeCards.map((c, i) => (
-                      <div key={i} className="w-8 h-12 bg-slate-800 border border-slate-600 rounded flex items-center justify-center text-xs font-bold text-slate-400">
-                        {stage === 'showdown' ? getCardLabel(c) : '🂠'}
-                      </div>
+                      <PlayingCard
+                        key={i}
+                        card={{
+                          suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                          rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                          isFaceUp: stage === 'showdown',
+                        }}
+                        size="sm"
+                      />
                     ))}
                   </div>
                 </div>
@@ -270,12 +277,18 @@ export const PokerGame: React.FC<PokerGameProps> = ({
 
               <div className="flex justify-center gap-2 pt-2">
                 {communityCards.map((c, i) => (
-                  <div key={i} className="w-12 h-18 bg-white text-slate-900 border-2 border-amber-400 rounded-xl font-black text-sm flex items-center justify-center shadow-lg">
-                    {getCardLabel(c)}
-                  </div>
+                  <PlayingCard
+                    key={i}
+                    card={{
+                      suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                      rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                      isFaceUp: true,
+                    }}
+                    size="md"
+                  />
                 ))}
                 {Array(5 - communityCards.length).fill(0).map((_, i) => (
-                  <div key={i} className="w-12 h-18 bg-slate-900/60 border border-dashed border-slate-700 rounded-xl flex items-center justify-center text-slate-600 text-xs">
+                  <div key={i} className="w-16 h-24 sm:w-20 sm:h-28 bg-slate-900/60 border border-dashed border-slate-700 rounded-xl flex items-center justify-center text-slate-600 text-xs">
                     ?
                   </div>
                 ))}
@@ -290,9 +303,15 @@ export const PokerGame: React.FC<PokerGameProps> = ({
 
               <div className="flex justify-center gap-2">
                 {player.holeCards.map((c, i) => (
-                  <div key={i} className="w-14 h-20 bg-white text-slate-900 border-2 border-amber-400 rounded-xl font-black text-base flex items-center justify-center shadow-xl">
-                    {getCardLabel(c)}
-                  </div>
+                  <PlayingCard
+                    key={i}
+                    card={{
+                      suit: c.suit === '♠' ? 'spades' : c.suit === '♥' ? 'hearts' : c.suit === '♦' ? 'diamonds' : 'clubs',
+                      rank: c.value === 14 ? 'A' : c.value === 13 ? 'K' : c.value === 12 ? 'Q' : c.value === 11 ? 'J' : (c.value.toString() as Rank),
+                      isFaceUp: true,
+                    }}
+                    size="md"
+                  />
                 ))}
               </div>
 

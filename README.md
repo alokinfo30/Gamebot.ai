@@ -10,7 +10,7 @@
 
 **GAMEBOT.AI** is a premium, web-based multi-game arena featuring **16+ AI-powered board, card, and motion sports games**. Designed with rich aesthetics, real-time Gemini AI integration, webcam gesture tracking, live multilingual voice commentary, ELO rank progression, and multi-layered WAF security.
 
-[---](https://gamebot-ai.ai.studio)
+[Click here to Play Now ](https://gamebot-ai.ai.studio)
 
 ## 🌟 Key Features & Capabilities
 

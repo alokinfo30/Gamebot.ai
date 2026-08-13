@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "test": "vitest run",
+    "test:qa": "tsx scripts/run-qa-agent.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {

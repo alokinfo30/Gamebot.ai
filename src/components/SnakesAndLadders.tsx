@@ -318,7 +318,7 @@ export const SnakesAndLadders: React.FC<SnakesAndLaddersProps> = ({
           {!currentPlayer.isBot && !winner && (
             <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 shadow-md">
               <Clock className="w-3.5 h-3.5 animate-spin" />
-              <span>AUTO-ROLL IN {turnTimerSeconds}s</span>
+              <span>🎲 ROLL TIMER: {turnTimerSeconds}s</span>
             </div>
           )}
 

@@ -197,6 +197,30 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
     }
   };
 
+  const [playTimerSeconds, setTurnTimerSeconds] = useState<number>(15);
+
+  // 15-Second Play Timer for Human Turn in Blackjack
+  useEffect(() => {
+    if (gameOver || playerCards.length === 0) {
+      setTurnTimerSeconds(15);
+      return;
+    }
+
+    const timerInterval = setInterval(() => {
+      setTurnTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerInterval);
+          // Auto-stand for player
+          handleStand();
+          return 15;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [gameOver, playerCards.length, handleStand]);
+
   const playerScore = calculateScore(playerCards);
   const dealerScore = calculateScore(dealerCards);
 
@@ -221,13 +245,21 @@ export const BlackjackGame: React.FC<BlackjackGameProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={startNewHand}
-          className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>New Deal</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {!gameOver && playerCards.length > 0 && (
+            <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 shadow-md">
+              <span>⏱️ PLAY TIMER: {playTimerSeconds}s</span>
+            </div>
+          )}
+
+          <button
+            onClick={startNewHand}
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>New Deal</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Arena */}

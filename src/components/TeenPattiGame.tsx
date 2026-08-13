@@ -237,6 +237,30 @@ export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
     }
   };
 
+  const [playTimerSeconds, setTurnTimerSeconds] = useState<number>(15);
+
+  // 15-Second Play Timer for Human Turn in Teen Patti
+  useEffect(() => {
+    if (gameOver || activeIdx !== 0) {
+      setTurnTimerSeconds(15);
+      return;
+    }
+
+    const timerInterval = setInterval(() => {
+      setTurnTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerInterval);
+          // Auto-place Chaal or Blind bet
+          handleChaal(false);
+          return 15;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [activeIdx, gameOver, handleChaal]);
+
   const player = players[0];
 
   return (
@@ -260,13 +284,21 @@ export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={dealNewHand}
-          className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Next Deal</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {activeIdx === 0 && !gameOver && (
+            <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 shadow-md">
+              <span>⏱️ PLAY TIMER: {playTimerSeconds}s</span>
+            </div>
+          )}
+
+          <button
+            onClick={dealNewHand}
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Next Deal</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Table Arena */}

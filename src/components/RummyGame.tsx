@@ -182,6 +182,35 @@ export const RummyGame: React.FC<RummyGameProps> = ({
     }
   };
 
+  const [playTimerSeconds, setTurnTimerSeconds] = useState<number>(15);
+
+  // 15-Second Play Timer for Human Turn in Rummy
+  useEffect(() => {
+    if (turn !== 'player') {
+      setTurnTimerSeconds(15);
+      return;
+    }
+
+    const timerInterval = setInterval(() => {
+      setTurnTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerInterval);
+          // Auto-draw or auto-discard
+          if (!hasDrawn) {
+            handleDrawCard('stock');
+          } else if (playerHand.length > 0) {
+            setSelectedCardId(playerHand[0].id);
+            handleDiscard();
+          }
+          return 15;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [turn, hasDrawn, playerHand, handleDrawCard, handleDiscard]);
+
   return (
     <div className="w-full max-w-[940px] mx-auto space-y-4 flex flex-col items-center select-none">
       {/* Header Bar */}
@@ -203,13 +232,21 @@ export const RummyGame: React.FC<RummyGameProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={startNewGame}
-          className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>New Deal</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {turn === 'player' && (
+            <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 shadow-md">
+              <span>⏱️ PLAY TIMER: {playTimerSeconds}s</span>
+            </div>
+          )}
+
+          <button
+            onClick={startNewGame}
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>New Deal</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Game Arena */}

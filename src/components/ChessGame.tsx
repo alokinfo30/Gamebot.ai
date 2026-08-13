@@ -321,20 +321,52 @@ export const ChessGame: React.FC<ChessGameProps> = ({
     }
   }, [turn, board, calculateMoves]);
 
+  const [playTimerSeconds, setTurnTimerSeconds] = useState<number>(15);
+
+  // 15-Second Play Timer for Human Turn in Chess
+  useEffect(() => {
+    if (turn !== 'w') {
+      setTurnTimerSeconds(15);
+      return;
+    }
+    const timerInterval = setInterval(() => {
+      setTurnTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerInterval);
+          // Auto-execute legal move for player
+          const allLegalMoves: { from: [number, number]; to: [number, number] }[] = [];
+          for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+              if (board[r][c]?.color === 'w') {
+                const legal = calculateMoves(r, c, board);
+                legal.forEach(([tr, tc]) => allLegalMoves.push({ from: [r, c], to: [tr, tc] }));
+              }
+            }
+          }
+          if (allLegalMoves.length > 0) {
+            const chosen = allLegalMoves[Math.floor(Math.random() * allLegalMoves.length)];
+            executeMove(chosen.from[0], chosen.from[1], chosen.to[0], chosen.to[1]);
+          }
+          return 15;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [turn, board]);
+
   return (
     <div className="w-full max-w-[940px] mx-auto space-y-4 flex flex-col items-center select-none">
       {/* Header Bar */}
       <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+          <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
             <span className="text-2xl">♟️</span>
           </div>
           <div>
             <h1 className="text-lg font-black text-white flex items-center gap-2">
-              <span>{t('game_chess', language)}</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono font-bold">
-                GRANDMASTER AI
-              </span>
+              <span>Grandmaster Chess</span>
             </h1>
             <p className="text-xs text-slate-400 font-medium">
               Standard Rules • Move Highlighting • Smart Tactician Engine
@@ -342,13 +374,21 @@ export const ChessGame: React.FC<ChessGameProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={resetGame}
-          className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>New Game</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {turn === 'w' && (
+            <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 shadow-md">
+              <span>⏱️ PLAY TIMER: {playTimerSeconds}s</span>
+            </div>
+          )}
+
+          <button
+            onClick={resetGame}
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>New Game</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Board Arena */}

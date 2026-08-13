@@ -237,6 +237,30 @@ export const PokerGame: React.FC<PokerGameProps> = ({
     }
   };
 
+  const [playTimerSeconds, setTurnTimerSeconds] = useState<number>(15);
+
+  // 15-Second Play Timer for Human Turn in Poker
+  useEffect(() => {
+    if (stage === 'showdown' || activeIdx !== 0) {
+      setTurnTimerSeconds(15);
+      return;
+    }
+
+    const timerInterval = setInterval(() => {
+      setTurnTimerSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerInterval);
+          // Auto-check/call for player
+          handleCall();
+          return 15;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerInterval);
+  }, [activeIdx, stage, handleCall]);
+
   const player = players[0];
 
   return (
@@ -260,13 +284,21 @@ export const PokerGame: React.FC<PokerGameProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={startNewHand}
-          className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>New Hand</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {activeIdx === 0 && stage !== 'showdown' && (
+            <div className="px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-mono font-black flex items-center gap-1.5 shadow-md">
+              <span>⏱️ PLAY TIMER: {playTimerSeconds}s</span>
+            </div>
+          )}
+
+          <button
+            onClick={startNewHand}
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Next Hand</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Arena */}

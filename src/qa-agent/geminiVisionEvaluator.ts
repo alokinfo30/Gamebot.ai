@@ -33,7 +33,6 @@ export class GeminiVisionEvaluator {
   public async evaluateGameVisuals(request: VisionAuditRequest): Promise<VisionAuditResult> {
     const { gameKey, gameSummaryText, ruleInvariantsTested } = request;
 
-    // Standard rule verification heuristic audit
     const ruleCompliance = true;
     const physicsRealistic = true;
     const detectedIssues: string[] = [];
@@ -44,8 +43,6 @@ export class GeminiVisionEvaluator {
       try {
         const { GoogleGenAI } = await import('@google/genai');
         const ai = new GoogleGenAI({ apiKey: this.apiKey });
-        const model = ai.models.get('gemini-3.6-flash');
-
         const prompt = `You are an expert Game Physics and Rules QA Auditor for GAMEBOT.AI.
 Analyze the following game summary and rule invariants for game "${gameKey}":
 Summary: ${gameSummaryText}
@@ -58,7 +55,8 @@ Evaluate:
 
 Respond with a brief 2-sentence QA assessment.`;
 
-        const response = await model.generateContent({
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
           contents: prompt,
         });
 

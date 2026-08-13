@@ -69,8 +69,9 @@ export const Board: React.FC<BoardProps> = ({
 }) => {
   const [inspectedPlayer, setInspectedPlayer] = useState<Player | null>(null);
   const [showCheatSheet, setShowCheatSheet] = useState<boolean>(false);
-  const isCurrentTurn = interactiveColor === gameState.currentTurnColor;
   const currentTurnPlayer = gameState.players.find((p) => p.color === gameState.currentTurnColor);
+  const isCurrentTurn = interactiveColor === gameState.currentTurnColor;
+  const isHumanTurn = isCurrentTurn && currentTurnPlayer?.type === 'human';
 
   // Group all active tokens by board coordinate to offset stacked tokens
   const tokenMap: Record<string, { token: TokenState; player: Player }[]> = {};
@@ -200,12 +201,12 @@ export const Board: React.FC<BoardProps> = ({
       {/* Main 15x15 Ludo Board Grid Canvas */}
       <div
         onClick={() => {
-          if (!gameState.hasRolled && isCurrentTurn && onRollDice) {
+          if (!gameState.hasRolled && isHumanTurn && onRollDice) {
             onRollDice();
           }
         }}
         className={`relative w-full aspect-square bg-slate-800 p-2 sm:p-3 shadow-2xl rounded-2xl border-2 sm:border-4 border-slate-700 overflow-hidden flex flex-col justify-center items-center ${
-          !gameState.hasRolled && isCurrentTurn ? 'cursor-pointer' : ''
+          !gameState.hasRolled && isHumanTurn ? 'cursor-pointer' : ''
         }`}
       >
       {/* SVG Defs for Colorblind Pattern Fills */}
@@ -325,8 +326,9 @@ export const Board: React.FC<BoardProps> = ({
             >
               {tokenGroup.map(({ token, player }, index) => {
                 const isMovable =
-                  isCurrentTurn &&
+                  isHumanTurn &&
                   gameState.hasRolled &&
+                  player.color === interactiveColor &&
                   player.color === gameState.currentTurnColor &&
                   gameState.validMoves.some((m) => m.tokenId === token.id);
 
@@ -338,14 +340,14 @@ export const Board: React.FC<BoardProps> = ({
                 const offsetX = count > 1 ? (index - (count - 1) / 2) * 6 : 0;
                 const offsetY = count > 1 ? (index - (count - 1) / 2) * 6 : 0;
 
-                const tokenBg =
+                const tokenBg3D =
                   token.color === 'red'
-                    ? 'bg-rose-500 shadow-rose-500/50'
+                    ? 'bg-gradient-to-br from-rose-400 via-rose-600 to-rose-950 border-rose-200 shadow-[0_8px_16px_rgba(225,29,72,0.7),inset_0_3px_5px_rgba(255,255,255,0.8),inset_0_-4px_6px_rgba(0,0,0,0.5)]'
                     : token.color === 'green'
-                    ? 'bg-emerald-500 shadow-emerald-500/50'
+                    ? 'bg-gradient-to-br from-emerald-400 via-emerald-600 to-emerald-950 border-emerald-200 shadow-[0_8px_16px_rgba(5,150,105,0.7),inset_0_3px_5px_rgba(255,255,255,0.8),inset_0_-4px_6px_rgba(0,0,0,0.5)]'
                     : token.color === 'yellow'
-                    ? 'bg-amber-500 shadow-amber-500/50'
-                    : 'bg-blue-500 shadow-blue-500/50';
+                    ? 'bg-gradient-to-br from-amber-300 via-amber-500 to-amber-900 border-amber-100 shadow-[0_8px_16px_rgba(217,119,6,0.7),inset_0_3px_5px_rgba(255,255,255,0.8),inset_0_-4px_6px_rgba(0,0,0,0.5)]'
+                    : 'bg-gradient-to-br from-blue-400 via-blue-600 to-blue-950 border-blue-200 shadow-[0_8px_16px_rgba(37,99,235,0.7),inset_0_3px_5px_rgba(255,255,255,0.8),inset_0_-4px_6px_rgba(0,0,0,0.5)]';
 
                 return (
                   <motion.div
@@ -361,26 +363,34 @@ export const Board: React.FC<BoardProps> = ({
                     transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                     onClick={(e) => {
                       e.stopPropagation();
+                      // STRICT RULE: Human player can ONLY click & move THEIR OWN TOKENS during THEIR OWN TURN!
+                      if (player.color !== interactiveColor || !isHumanTurn) return;
+
                       if (isMovable) {
                         onTokenClick(token.id);
-                      } else if (!gameState.hasRolled && isCurrentTurn && onRollDice) {
+                      } else if (!gameState.hasRolled && onRollDice) {
                         onRollDice();
                       }
                     }}
-                    className={`pointer-events-auto cursor-pointer relative w-4/5 h-4/5 rounded-full border-2 border-white shadow-md flex items-center justify-center font-extrabold text-[10px] text-white overflow-hidden ${tokenBg} ${
+                    className={`pointer-events-auto relative w-4/5 h-4/5 rounded-full border-2 transition-all flex items-center justify-center font-extrabold text-[10px] text-white overflow-hidden ${tokenBg3D} ${
+                      player.color === interactiveColor && isHumanTurn ? 'cursor-pointer' : 'cursor-not-allowed opacity-90'
+                    } ${
                       isMovable
                         ? 'ring-4 ring-yellow-300 ring-offset-1 ring-offset-slate-950 animate-bounce z-30'
                         : ''
                     } ${isSelected ? 'ring-4 ring-cyan-400 z-40' : ''}`}
                   >
+                    {/* 3D Specular Highlight Dome */}
+                    <div className="absolute top-0.5 left-1 right-1 h-2 rounded-t-full bg-gradient-to-b from-white/70 to-transparent pointer-events-none z-10" />
+
                     {/* Pattern Texture Overlay on Token */}
                     {isColorblindMode && (
                       <ColorblindPatternOverlay color={token.color} opacity={0.85} />
                     )}
 
-                    {/* Inner Token Core Ring with Number & Symbol */}
-                    <div className="w-2/3 h-2/3 rounded-full border border-white/80 bg-slate-950/60 flex items-center justify-center relative z-10 backdrop-blur-[1px]">
-                      <span className="text-[9px] font-black text-white drop-shadow-md flex items-center gap-0.5">
+                    {/* Inner Metallic Bevel Ring with Number & Symbol */}
+                    <div className="w-3/4 h-3/4 rounded-full border-2 border-white/90 bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center relative z-20 shadow-[inset_0_2px_4px_rgba(0,0,0,0.8),0_1px_2px_rgba(255,255,255,0.4)]">
+                      <span className="text-[10px] sm:text-xs font-black text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)] flex items-center gap-0.5">
                         {isColorblindMode && (
                           <span className="text-[8px] opacity-90">{COLORBIND_SYMBOLS[token.color]}</span>
                         )}
@@ -481,7 +491,7 @@ export const Board: React.FC<BoardProps> = ({
                 {player.name}
               </span>
 
-              {isCurrentTurn && !gameState.hasRolled && onRollDice && (
+              {isHumanTurn && player.color === interactiveColor && !gameState.hasRolled && onRollDice && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

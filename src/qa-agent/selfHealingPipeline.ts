@@ -36,8 +36,6 @@ export class SelfHealingPipeline {
       try {
         const { GoogleGenAI } = await import('@google/genai');
         const ai = new GoogleGenAI({ apiKey: this.apiKey });
-        const model = ai.models.get('gemini-3.6-flash');
-
         const prompt = `You are an Autonomous Self-Healing Code Repair Engineer for GAMEBOT.AI.
 An anomaly was detected in file "${targetFile}":
 Error: ${anomaly.message}
@@ -50,7 +48,8 @@ ${existingCode.slice(0, 1500)}
 
 Diagnose the bug and output ONLY the corrected code snippet that resolves the error safely without breaking API contracts.`;
 
-        const response = await model.generateContent({
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
           contents: prompt,
         });
 
@@ -103,8 +102,7 @@ Diagnose the bug and output ONLY the corrected code snippet that resolves the er
     let healedCount = 0;
 
     for (const game of games) {
-      // Perform automated checks
-      totalAnomalies += 0; // Clean baseline
+      totalAnomalies += 0;
     }
 
     return {

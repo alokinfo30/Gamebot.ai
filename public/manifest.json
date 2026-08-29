@@ -1,0 +1,23 @@
+{
+  "name": "GAMEBOT.AI - Play Ludo & Board Games Offline",
+  "short_name": "GAMEBOT.AI",
+  "description": "Play 15+ Board, Card & Sports Games Online or Offline with AI Bots",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

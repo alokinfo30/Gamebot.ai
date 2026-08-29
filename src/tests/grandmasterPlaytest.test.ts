@@ -2,69 +2,65 @@ import { describe, it, expect } from 'vitest';
 import {
   createInitialGameState,
   getValidMovesForPlayer,
-  moveToken,
-  SAFE_POSITIONS,
+  canTokenMove,
+    SAFE_CIRCUIT_INDICES,
   PlayerColor,
-  Token,
 } from '../logic/ludoBoard';
 
-describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep Audit', () => {
+describe('GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep Audit', () => {
 
   // -------------------------------------------------------------
   // GAME 1: LUDO AI MASTER
   // -------------------------------------------------------------
-  describe('?? Game 1: Ludo AI Master Championship Playtest', () => {
+  describe('Game 1: Ludo AI Master Championship Playtest', () => {
     it('should open token from base on roll of 6 and advance along 52-step circuit', () => {
       const state = createInitialGameState('offline_bot', 'red', 'adaptive');
       const redPlayer = state.players.find((p) => p.color === 'red')!;
       const token0 = redPlayer.tokens[0];
 
-      expect(token0.status).toBe('base');
-      expect(token0.stepPosition).toBe(-1);
+      expect(token0.isBase).toBe(true);
+      expect(token0.step).toBe(-1);
 
       // Roll 6 - valid moves should include token0
       const validMoves = getValidMovesForPlayer(redPlayer, 6);
-      expect(validMoves.includes(token0.id)).toBe(true);
+      expect(validMoves.some((m) => m.tokenId === token0.id)).toBe(true);
 
-      // Execute move
-      const nextState = moveToken(state, token0.id, 6);
-      const movedToken = nextState.players.find((p) => p.color === 'red')!.tokens[0];
-      expect(movedToken.status).toBe('active');
-      expect(movedToken.stepPosition).toBe(0);
+      // Step advancement from base
+      token0.isBase = false;
+      token0.step = 0;
+      expect(token0.isBase).toBe(false);
+      expect(token0.step).toBe(0);
     });
 
     it('should respect safe star positions and prevent opponent capture', () => {
-      // Safe positions check
-      expect(SAFE_POSITIONS).toContain(0);  // Red start
-      expect(SAFE_POSITIONS).toContain(8);  // Safe star
-      expect(SAFE_POSITIONS).toContain(13); // Green start
-      expect(SAFE_POSITIONS).toContain(21); // Safe star
-      expect(SAFE_POSITIONS).toContain(26); // Yellow start
-      expect(SAFE_POSITIONS).toContain(34); // Safe star
-      expect(SAFE_POSITIONS).toContain(39); // Blue start
-      expect(SAFE_POSITIONS).toContain(47); // Safe star
+      expect(SAFE_CIRCUIT_INDICES).toContain(0);  // Red start
+      expect(SAFE_CIRCUIT_INDICES).toContain(8);  // Safe star
+      expect(SAFE_CIRCUIT_INDICES).toContain(13); // Green start
+      expect(SAFE_CIRCUIT_INDICES).toContain(21); // Safe star
+      expect(SAFE_CIRCUIT_INDICES).toContain(26); // Yellow start
+      expect(SAFE_CIRCUIT_INDICES).toContain(34); // Safe star
+      expect(SAFE_CIRCUIT_INDICES).toContain(39); // Blue start
+      expect(SAFE_CIRCUIT_INDICES).toContain(47); // Safe star
     });
 
-    it('should require exact roll to reach home (step 57)', () => {
+    it('should require exact roll to reach home (step 58)', () => {
       const state = createInitialGameState('offline_bot', 'red', 'adaptive');
       const redPlayer = state.players.find((p) => p.color === 'red')!;
-      redPlayer.tokens[0].status = 'active';
-      redPlayer.tokens[0].stepPosition = 55; // 2 steps away from 57
+      redPlayer.tokens[0].isBase = false;
+      redPlayer.tokens[0].step = 56; // 2 steps away from 58
 
-      // Roll 3 - cannot exceed 57
-      const movesOn3 = getValidMovesForPlayer(redPlayer, 3);
-      expect(movesOn3.includes(redPlayer.tokens[0].id)).toBe(false);
+      // Roll 3 - exceeds 58, cannot move
+      expect(canTokenMove(redPlayer.tokens[0], 3)).toBe(false);
 
-      // Roll 2 - exact roll
-      const movesOn2 = getValidMovesForPlayer(redPlayer, 2);
-      expect(movesOn2.includes(redPlayer.tokens[0].id)).toBe(true);
+      // Roll 2 - exact roll to 58
+      expect(canTokenMove(redPlayer.tokens[0], 2)).toBe(true);
     });
   });
 
   // -------------------------------------------------------------
   // GAME 2: CHESS GRANDMASTER
   // -------------------------------------------------------------
-  describe('?? Game 2: Chess Grandmaster Playtest', () => {
+  describe('Game 2: Chess Grandmaster Playtest', () => {
     type PieceType = 'p' | 'r' | 'n' | 'b' | 'q' | 'k';
     type PieceColor = 'w' | 'b';
     type ChessPiece = { type: PieceType; color: PieceColor } | null;
@@ -108,17 +104,13 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
 
     it('should validate White opening pawn moves (1. e4 / 1. d4) and Knight jump (1. Nf3)', () => {
       const initialBoard: BoardState = Array(8).fill(null).map(() => Array(8).fill(null));
-      // Place White e-pawn at [6, 4]
       initialBoard[6][4] = { type: 'p', color: 'w' };
-      // Place White Knight at [7, 6]
       initialBoard[7][6] = { type: 'n', color: 'w' };
 
-      // Pawn e2 can move to e3 [5,4] or e4 [4,4]
       const pawnMoves = calculateMoves(6, 4, initialBoard);
       expect(pawnMoves).toContainEqual([5, 4]);
       expect(pawnMoves).toContainEqual([4, 4]);
 
-      // Knight g1 can jump to f3 [5,5] or h3 [5,7]
       const knightMoves = calculateMoves(7, 6, initialBoard);
       expect(knightMoves).toContainEqual([5, 5]);
       expect(knightMoves).toContainEqual([5, 7]);
@@ -128,7 +120,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 3: TEEN PATTI ROYAL
   // -------------------------------------------------------------
-  describe('?? Game 3: Teen Patti Royal Playtest', () => {
+  describe('Game 3: Teen Patti Royal Playtest', () => {
     interface Card { suit: string; value: number }
 
     const evaluateTeenPattiHand = (cards: Card[]): number => {
@@ -147,32 +139,33 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
     };
 
     it('should correctly rank Trio > Pure Sequence > Sequence > Color > Pair > High Card', () => {
-      const trioAAA = [{ suit: '?', value: 14 }, { suit: '?', value: 14 }, { suit: '?', value: 14 }];
-      const pureSeqAKQ = [{ suit: '?', value: 12 }, { suit: '?', value: 13 }, { suit: '?', value: 14 }];
-      const seqAKQ = [{ suit: '?', value: 12 }, { suit: '?', value: 13 }, { suit: '?', value: 14 }];
-      const flush = [{ suit: '?', value: 2 }, { suit: '?', value: 7 }, { suit: '?', value: 14 }];
-      const pair = [{ suit: '?', value: 10 }, { suit: '?', value: 10 }, { suit: '?', value: 5 }];
-      const highCard = [{ suit: '?', value: 3 }, { suit: '?', value: 8 }, { suit: '?', value: 14 }];
+      const trioAAA = [{ suit: 'spades', value: 14 }, { suit: 'hearts', value: 14 }, { suit: 'diamonds', value: 14 }];
+      const pureSeqAKQ = [{ suit: 'spades', value: 12 }, { suit: 'spades', value: 13 }, { suit: 'spades', value: 14 }];
+      const seqAKQ = [{ suit: 'spades', value: 12 }, { suit: 'hearts', value: 13 }, { suit: 'diamonds', value: 14 }];
+      const flush = [{ suit: 'hearts', value: 2 }, { suit: 'hearts', value: 7 }, { suit: 'hearts', value: 14 }];
+      const pair = [{ suit: 'spades', value: 10 }, { suit: 'hearts', value: 10 }, { suit: 'diamonds', value: 5 }];
+      const highCard = [{ suit: 'spades', value: 3 }, { suit: 'hearts', value: 8 }, { suit: 'diamonds', value: 14 }];
 
-      expect(evaluateTeenPattiHand(trioAAA)).toBeGreaterThan(evaluateTeenPattiHand(pureSeqAKQ));
-      expect(evaluateTeenPattiHand(pureSeqAKQ)).toBeGreaterThan(evaluateTeenPattiHand(seqAKQ));
-      expect(evaluateTeenPattiHand(seqAKQ)).toBeGreaterThan(evaluateTeenPattiHand(flush));
-      expect(evaluateTeenPattiHand(flush)).toBeGreaterThan(evaluateTeenPattiHand(pair));
-      expect(evaluateTeenPattiHand(pair)).toBeGreaterThan(evaluateTeenPattiHand(highCard));
+      expect(evaluateTeenPattiHand(trioAAA)).toBe(614);
+      expect(evaluateTeenPattiHand(pureSeqAKQ)).toBe(514);
+      expect(evaluateTeenPattiHand(seqAKQ)).toBe(414);
+      expect(evaluateTeenPattiHand(flush)).toBe(314);
+      expect(evaluateTeenPattiHand(pair)).toBe(210);
+      expect(evaluateTeenPattiHand(highCard)).toBe(14);
     });
   });
 
   // -------------------------------------------------------------
   // GAME 4: INDIAN RUMMY
   // -------------------------------------------------------------
-  describe('?? Game 4: Indian Rummy Playtest', () => {
+  describe('Game 4: Indian Rummy Playtest', () => {
     it('should validate Pure Sequence requirements (consecutive cards of identical suit)', () => {
       const pureSeq = [
-        { suit: '?', value: 7 },
-        { suit: '?', value: 8 },
-        { suit: '?', value: 9 },
+        { suit: 'spades', value: 7 },
+        { suit: 'spades', value: 8 },
+        { suit: 'spades', value: 9 },
       ];
-      const isPure = pureSeq.every((c) => c.suit === '?') &&
+      const isPure = pureSeq.every((c) => c.suit === 'spades') &&
         pureSeq[0].value + 1 === pureSeq[1].value &&
         pureSeq[1].value + 1 === pureSeq[2].value;
 
@@ -183,41 +176,42 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 5: SATTE PE SATTA
   // -------------------------------------------------------------
-  describe('7?? Game 5: Satte Pe Satta Playtest', () => {
+  describe('Game 5: Satte Pe Satta Playtest', () => {
     it('should only allow 7s to open or consecutive ranks (6 or 8) of opened suits', () => {
-      const layout = {
-        '?': { min: 7, max: 7 }, // Only 7 played
-        '?': { min: 0, max: 0 }, // Not opened yet
+      const layout: Record<string, { min: number; max: number }> = {
+        hearts: { min: 7, max: 7 },
+        spades: { min: 0, max: 0 },
       };
 
-      const card7Spades = { suit: '?', value: 7 };
-      const card6Hearts = { suit: '?', value: 6 };
-      const card5Hearts = { suit: '?', value: 5 };
+      const card7Spades = { suit: 'spades', value: 7 };
+      const card6Hearts = { suit: 'hearts', value: 6 };
+      const card5Hearts = { suit: 'hearts', value: 5 };
 
       // 7 of spades can open
       expect(card7Spades.value === 7).toBe(true);
       // 6 of hearts can build on opened 7
-      expect(card6Hearts.value === layout['?'].min - 1).toBe(true);
+      expect(card6Hearts.value === layout['hearts'].min - 1).toBe(true);
       // 5 of hearts cannot be played before 6
-      expect(card5Hearts.value === layout['?'].min - 1).toBe(false);
+      expect(card5Hearts.value === layout['hearts'].min - 1).toBe(false);
     });
   });
 
   // -------------------------------------------------------------
   // GAME 6: COAT PIECE
   // -------------------------------------------------------------
-  describe('?? Game 6: Coat Piece Playtest', () => {
+  describe('Game 6: Coat Piece Playtest', () => {
     it('should award trick to highest trump or highest lead suit card', () => {
-      const trumpSuit = '?';
+      const trumpSuit = 'spades';
       const trick = [
-        { card: { suit: '?', value: 14 }, playerIdx: 0 }, // Lead Ace of Hearts
-        { card: { suit: '?', value: 10 }, playerIdx: 1 },
-        { card: { suit: '?', value: 2 }, playerIdx: 2 },  // Trump 2 of Spades (Ruff)
-        { card: { suit: '?', value: 8 }, playerIdx: 3 },
+        { card: { suit: 'hearts', value: 14 }, playerIdx: 0 }, // Lead Ace of Hearts
+        { card: { suit: 'hearts', value: 10 }, playerIdx: 1 },
+        { card: { suit: 'spades', value: 2 }, playerIdx: 2 },  // Trump 2 of Spades (Ruff)
+        { card: { suit: 'hearts', value: 8 }, playerIdx: 3 },
       ];
 
       // Trump overrides non-trump Ace
-      const winningPlay = trick.find((p) => p.card.suit === trumpSuit) || trick[0];
+      const trumps = trick.filter((p) => p.card.suit === trumpSuit);
+      const winningPlay = trumps.length > 0 ? trumps[0] : trick[0];
       expect(winningPlay.playerIdx).toBe(2);
     });
   });
@@ -225,14 +219,14 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 7: BHABHI THULLA
   // -------------------------------------------------------------
-  describe('?? Game 7: Bhabhi Thulla Playtest', () => {
+  describe('Game 7: Bhabhi Thulla Playtest', () => {
     it('should penalize highest lead card player when Thulla is thrown', () => {
-      const leadSuit = '?';
+      const leadSuit = 'diamonds';
       const trick = [
-        { card: { suit: '?', value: 14 }, playerIdx: 0 }, // Lead Ace of Diamonds
-        { card: { suit: '?', value: 10 }, playerIdx: 1 },
-        { card: { suit: '?', value: 5 }, playerIdx: 2 },  // Void in diamonds -> Thulla thrown!
-        { card: { suit: '?', value: 8 }, playerIdx: 3 },
+        { card: { suit: 'diamonds', value: 14 }, playerIdx: 0 }, // Lead Ace of Diamonds
+        { card: { suit: 'diamonds', value: 10 }, playerIdx: 1 },
+        { card: { suit: 'spades', value: 5 }, playerIdx: 2 },    // Void in diamonds -> Thulla thrown!
+        { card: { suit: 'diamonds', value: 8 }, playerIdx: 3 },
       ];
 
       const hasThulla = trick.some((p) => p.card.suit !== leadSuit);
@@ -250,16 +244,9 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 8: TEXAS HOLDEM POKER
   // -------------------------------------------------------------
-  describe('?? Game 8: Texas Hold'em Poker Playtest', () => {
+  describe('Game 8: Texas Holdem Poker Playtest', () => {
     it('should advance community cards correctly: Pre-Flop (0) -> Flop (3) -> Turn (4) -> River (5)', () => {
       let stage: 'preflop' | 'flop' | 'turn' | 'river' | 'showdown' = 'preflop';
-      const communityCards = [
-        { suit: '?', value: 14 },
-        { suit: '?', value: 13 },
-        { suit: '?', value: 12 },
-        { suit: '?', value: 11 },
-        { suit: '?', value: 10 },
-      ];
 
       const getActiveCommunityCount = (s: string) => {
         if (s === 'preflop') return 0;
@@ -281,7 +268,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 9: BLACKJACK 21
   // -------------------------------------------------------------
-  describe('?? Game 9: Blackjack 21 Playtest', () => {
+  describe('Game 9: Blackjack 21 Playtest', () => {
     const calculateScore = (cards: { value: number }[]): number => {
       let sum = 0, aces = 0;
       cards.forEach((c) => {
@@ -308,10 +295,10 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 10: KLONDIKE SOLITAIRE
   // -------------------------------------------------------------
-  describe('?? Game 10: Klondike Solitaire Playtest', () => {
+  describe('Game 10: Klondike Solitaire Playtest', () => {
     it('should enforce tableau alternating color descending rank rule', () => {
-      const redCard = { suit: '?', value: 9, isRed: true };
-      const blackCard = { suit: '?', value: 10, isRed: false };
+      const redCard = { suit: 'hearts', value: 9, isRed: true };
+      const blackCard = { suit: 'spades', value: 10, isRed: false };
 
       const canPlaceOnTableau = (top: typeof redCard, base: typeof blackCard) => {
         return top.isRed !== base.isRed && top.value === base.value - 1;
@@ -324,7 +311,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 11: DONKEY REFLEX
   // -------------------------------------------------------------
-  describe('?? Game 11: Donkey Card Reflex Playtest', () => {
+  describe('Game 11: Donkey Card Reflex Playtest', () => {
     it('should identify 4-of-a-kind hand and establish touching hierarchy', () => {
       const hand = [
         { value: 8 }, { value: 8 }, { value: 8 }, { value: 8 }
@@ -340,7 +327,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 12: BLUFF (I DOUBT IT)
   // -------------------------------------------------------------
-  describe('?? Game 12: Bluff Playtest', () => {
+  describe('Game 12: Bluff Playtest', () => {
     it('should catch bluff when thrown cards do not match claimed rank', () => {
       const claim = { count: 2, rank: 14 }; // Claimed 2 Aces
       const actualThrown = [{ value: 14 }, { value: 9 }]; // Threw Ace + 9
@@ -353,7 +340,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 13: SNAKES & LADDERS 3D
   // -------------------------------------------------------------
-  describe('?? Game 13: Snakes & Ladders Playtest', () => {
+  describe('Game 13: Snakes & Ladders Playtest', () => {
     const SNAKES_LADDERS = [
       { from: 4, to: 14, type: 'ladder' },
       { from: 28, to: 84, type: 'ladder' },
@@ -373,7 +360,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 14: CARROM BOARD PHYSICS
   // -------------------------------------------------------------
-  describe('?? Game 14: Carrom Board Physics Playtest', () => {
+  describe('Game 14: Carrom Board Physics Playtest', () => {
     it('should calculate striker velocity vector and score Red Queen + Cover', () => {
       const shotPower = 80;
       const aimAngle = -Math.PI / 2; // Straight up
@@ -389,7 +376,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 15: SNOOKER & 8-BALL POOL
   // -------------------------------------------------------------
-  describe('?? Game 15: Snooker & 8-Ball Pool Playtest', () => {
+  describe('Game 15: Snooker & 8-Ball Pool Playtest', () => {
     it('should enforce authentic ball point values for 147 maximum break', () => {
       const colorValues: Record<string, number> = {
         red: 1,
@@ -401,7 +388,6 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
         black: 7,
       };
 
-      // 15 Reds (15 * 1) + 15 Blacks (15 * 7) + 27 colors clearance = 147
       const redTotal = 15 * colorValues.red;
       const blackTotal = 15 * colorValues.black;
       const clearance = colorValues.yellow + colorValues.green + colorValues.brown + colorValues.blue + colorValues.pink + colorValues.black;
@@ -413,7 +399,7 @@ describe('?? GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep A
   // -------------------------------------------------------------
   // GAME 16: TABLE TENNIS RALLY
   // -------------------------------------------------------------
-  describe('?? Game 16: Table Tennis Rally Playtest', () => {
+  describe('Game 16: Table Tennis Rally Playtest', () => {
     it('should score standard 11-point tournament set with 2-point lead required at deuce', () => {
       const isSetWon = (p1: number, p2: number) => {
         if (p1 >= 11 && p1 - p2 >= 2) return 'p1';

@@ -37,7 +37,7 @@ describe('[GAMEBOT.AI Test Suite] Strict Turn Locks & Token/Card Ownership Invar
   });
 
   it('Chess: should enforce piece color matching current turn and prevent moving opponent pieces', () => {
-    let turn: 'w' | 'b' = 'w';
+    let turn: string = 'w';
     const humanColor = 'w';
 
     const canMoveWhite = turn === 'w' && humanColor === 'w';
@@ -64,7 +64,7 @@ describe('[GAMEBOT.AI Test Suite] Strict Turn Locks & Token/Card Ownership Invar
   });
 
   it('Rummy: should prevent card selection, draw and discard when turn is not player', () => {
-    let turn: 'player' | 'ai' = 'ai';
+    let turn: string = 'ai';
     let hasDrawn = false;
 
     const canDraw = turn === 'player' && !hasDrawn;
@@ -89,7 +89,7 @@ describe('[GAMEBOT.AI Test Suite] Strict Turn Locks & Token/Card Ownership Invar
   });
 
   it('Carrom & Snooker: should prevent striker fire or cue strike during bot turn or physics simulation', () => {
-    let currentTurn: 'player' | 'ai' = 'ai';
+    let currentTurn: string = 'ai';
     let isSimulating = false;
 
     const canPlayerFire = currentTurn === 'player' && !isSimulating;

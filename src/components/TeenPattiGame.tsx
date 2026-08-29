@@ -3,12 +3,14 @@ import { motion } from 'motion/react';
 import { RotateCcw, Trophy, Eye, EyeOff, Coins, ShieldAlert } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface TeenPattiGameProps {
   language: LanguageCode;
   isMuted: boolean;
   isColorblindMode: boolean;
+  playMode?: GamePlayMode;
 }
 
 interface Card {
@@ -40,6 +42,7 @@ export const TeenPattiGame: React.FC<TeenPattiGameProps> = ({
   language,
   isMuted,
   isColorblindMode,
+  playMode = 'vs_ai',
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
   const [pot, setPot] = useState<number>(0);

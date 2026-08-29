@@ -1,5 +1,7 @@
 import { PlayerColor, TokenState, Player, GameState, MoveLog } from '../types/ludo';
 
+export type { PlayerColor };
+
 // Absolute circuit coordinates on a 15x15 grid [row, col]
 export const MAIN_CIRCUIT_PATH: [number, number][] = [
   [6, 1],   // 0: Red Start (Safe)

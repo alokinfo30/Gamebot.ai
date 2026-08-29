@@ -3,12 +3,14 @@ import { motion } from 'motion/react';
 import { RotateCcw, Trophy, Bot, Sparkles, Shield, Swords } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface ChessGameProps {
   language: LanguageCode;
   isMuted: boolean;
   isColorblindMode: boolean;
+  playMode?: GamePlayMode;
 }
 
 type PieceType = 'p' | 'r' | 'n' | 'b' | 'q' | 'k';
@@ -59,6 +61,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({
   language,
   isMuted,
   isColorblindMode,
+  playMode = 'vs_ai',
 }) => {
   const [board, setBoard] = useState<BoardState>(() => {
     try {

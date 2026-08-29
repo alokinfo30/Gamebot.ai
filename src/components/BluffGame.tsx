@@ -3,12 +3,14 @@ import { motion } from 'motion/react';
 import { RotateCcw, Trophy, ShieldAlert, Eye, Bot, Flame } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface BluffGameProps {
   language: LanguageCode;
   isMuted: boolean;
   isColorblindMode: boolean;
+  playMode?: GamePlayMode;
 }
 
 interface Card {
@@ -31,6 +33,7 @@ export const BluffGame: React.FC<BluffGameProps> = ({
   language,
   isMuted,
   isColorblindMode,
+  playMode = 'vs_ai',
 }) => {
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [aiHands, setAiHands] = useState<Card[][]>([[], [], []]);

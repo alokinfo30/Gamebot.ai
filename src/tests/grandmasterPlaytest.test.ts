@@ -3,9 +3,9 @@ import {
   createInitialGameState,
   getValidMovesForPlayer,
   canTokenMove,
-    SAFE_CIRCUIT_INDICES,
-  PlayerColor,
+  SAFE_CIRCUIT_INDICES,
 } from '../logic/ludoBoard';
+import type { PlayerColor } from '../types/ludo';
 
 describe('GRANDMASTER WORLD CHAMPION PLAYTEST: 16-Game Move Analysis & Deep Audit', () => {
 

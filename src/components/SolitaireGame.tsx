@@ -3,12 +3,14 @@ import { motion } from 'motion/react';
 import { RotateCcw, Trophy, Lightbulb, Sparkles, Layers } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface SolitaireGameProps {
   language: LanguageCode;
   isMuted: boolean;
   isColorblindMode: boolean;
+  playMode?: GamePlayMode;
 }
 
 interface Card {
@@ -34,6 +36,7 @@ export const SolitaireGame: React.FC<SolitaireGameProps> = ({
   language,
   isMuted,
   isColorblindMode,
+  playMode = 'vs_ai',
 }) => {
   const [stock, setStock] = useState<Card[]>([]);
   const [waste, setWaste] = useState<Card[]>([]);

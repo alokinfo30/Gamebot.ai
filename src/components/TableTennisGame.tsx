@@ -3,12 +3,14 @@ import { motion } from 'motion/react';
 import { RotateCcw, Sparkles, Volume2, VolumeX, Trophy, Bot, Play, Zap, Shield } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface TableTennisGameProps {
   language: LanguageCode;
   isMuted: boolean;
   isColorblindMode: boolean;
+  playMode?: GamePlayMode;
 }
 
 const COURT_W = 500;
@@ -18,6 +20,7 @@ export const TableTennisGame: React.FC<TableTennisGameProps> = ({
   language,
   isMuted,
   isColorblindMode,
+  playMode = 'vs_ai',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 

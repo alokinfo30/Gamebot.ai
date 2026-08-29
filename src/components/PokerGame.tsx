@@ -3,12 +3,14 @@ import { motion } from 'motion/react';
 import { RotateCcw, Trophy, Coins, Eye, EyeOff, Shield } from 'lucide-react';
 import { soundManager } from '../logic/soundManager';
 import { LanguageCode, t } from '../logic/i18n';
+import { GamePlayMode } from '../logic/multiplayerRoomManager';
 import { BotCommentaryOverlay } from './BotCommentaryOverlay';
 
 export interface PokerGameProps {
   language: LanguageCode;
   isMuted: boolean;
   isColorblindMode: boolean;
+  playMode?: GamePlayMode;
 }
 
 interface Card {
@@ -42,6 +44,7 @@ export const PokerGame: React.FC<PokerGameProps> = ({
   language,
   isMuted,
   isColorblindMode,
+  playMode = 'vs_ai',
 }) => {
   const [deck, setDeck] = useState<Card[]>([]);
   const [communityCards, setCommunityCards] = useState<Card[]>([]);

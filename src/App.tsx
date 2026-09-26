@@ -32,6 +32,7 @@ import {
   Player,
   UserProfile,
   GestureType,
+  BotDifficulty,
 } from './types/ludo';
 import {
   createInitialGameState,
@@ -83,6 +84,15 @@ const TURN_TIMEOUT_SECONDS = 15;
 export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>(getStoredUserProfile());
   const [language, setLanguage] = useState<LanguageCode>(() => detectUserLanguage());
+  const [ludoBotDifficulty, setLudoBotDifficulty] = useState<BotDifficulty>(() => {
+    try {
+      const saved = localStorage.getItem('gamebot_ludo_difficulty');
+      if (saved === 'easy' || saved === 'medium' || saved === 'hard') {
+        return saved as BotDifficulty;
+      }
+    } catch (e) {}
+    return 'medium';
+  });
   const [gestureSensitivity, setGestureSensitivity] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('gamebot_gesture_sensitivity');
@@ -143,7 +153,16 @@ export default function App() {
     } catch (e) {
       console.error('Failed to restore saved game state', e);
     }
-    return createInitialGameState('offline_bot', 'red', 'adaptive');
+    const initialDiff = (() => {
+      try {
+        const savedDiff = localStorage.getItem('gamebot_ludo_difficulty');
+        if (savedDiff === 'easy' || savedDiff === 'medium' || savedDiff === 'hard') {
+          return savedDiff as BotDifficulty;
+        }
+      } catch (e) {}
+      return 'medium';
+    })();
+    return createInitialGameState('offline_bot', 'red', initialDiff);
   });
   const [selectedTokenId, setSelectedTokenId] = useState<number | null>(null);
   const [isGestureEnabled, setIsGestureEnabled] = useState<boolean>(() => {
@@ -388,6 +407,31 @@ export default function App() {
     return () => clearInterval(timer);
   }, [gameState.status, isMuted]);
 
+  // AI Bot Difficulty Selection Handler
+  const handleSelectLudoDifficulty = useCallback((difficulty: 'easy' | 'medium' | 'hard') => {
+    setLudoBotDifficulty(difficulty);
+    try {
+      localStorage.setItem('gamebot_ludo_difficulty', difficulty);
+    } catch (e) {}
+
+    // Update active bot players immediately in existing game
+    setGameState((prev) => ({
+      ...prev,
+      players: prev.players.map((p) => {
+        if (p.type === 'bot') {
+          const eloByDiff = difficulty === 'easy' ? 1050 : difficulty === 'medium' ? 1380 : 1850;
+          return {
+            ...p,
+            botDifficulty: difficulty,
+            elo: eloByDiff,
+          };
+        }
+        return p;
+      }),
+      commentary: `AI Difficulty set to ${difficulty.toUpperCase()}. Bots will immediately adjust their tactics!`,
+    }));
+  }, []);
+
   // Start New Game
   const handleStartNewGame = (
     mode: 'offline_bot' | 'local_pass' | 'online_room',
@@ -400,7 +444,8 @@ export default function App() {
     } else {
       setIsOnlineLobbyOpen(true);
     }
-    const newGame = createInitialGameState(mode, humanColor, 'adaptive');
+    const targetDiff = mode === 'offline_bot' ? ludoBotDifficulty : 'adaptive';
+    const newGame = createInitialGameState(mode, humanColor, targetDiff);
     setGameState(newGame);
     setSelectedTokenId(null);
     setTurnSecondsLeft(TURN_TIMEOUT_SECONDS);
@@ -1204,6 +1249,102 @@ export default function App() {
             />
           ) : (
             <>
+              {/* AI Difficulty Level Selector (VS AI Mode) */}
+              {activeTab === 'offline_bot' && (
+                <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Bot className="w-3.5 h-3.5 text-blue-400" />
+                      <span>AI Difficulty Level</span>
+                    </h2>
+                    <span
+                      className={`text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full border uppercase ${
+                        ludoBotDifficulty === 'easy'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          : ludoBotDifficulty === 'hard'
+                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      }`}
+                    >
+                      {ludoBotDifficulty}
+                    </span>
+                  </div>
+
+                  {/* 3 Difficulty Selector Buttons */}
+                  <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-950 border border-slate-800/80">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectLudoDifficulty('easy')}
+                      className={`py-2 px-1 rounded-lg text-xs font-extrabold flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                        ludoBotDifficulty === 'easy'
+                          ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 ring-1 ring-emerald-400'
+                          : 'text-slate-400 hover:text-emerald-300 hover:bg-slate-900'
+                      }`}
+                      title="Easy: Casual gameplay with relaxed bot decisions"
+                    >
+                      <span className="text-[11px]">🟢 Easy</span>
+                      <span className="text-[9px] font-mono opacity-80">Casual</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectLudoDifficulty('medium')}
+                      className={`py-2 px-1 rounded-lg text-xs font-extrabold flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                        ludoBotDifficulty === 'medium'
+                          ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30 ring-1 ring-amber-400'
+                          : 'text-slate-400 hover:text-amber-300 hover:bg-slate-900'
+                      }`}
+                      title="Medium: Balanced tactical bot positioning"
+                    >
+                      <span className="text-[11px]">🟡 Med</span>
+                      <span className="text-[9px] font-mono opacity-80">Tactical</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectLudoDifficulty('hard')}
+                      className={`py-2 px-1 rounded-lg text-xs font-extrabold flex flex-col items-center justify-center gap-0.5 transition cursor-pointer ${
+                        ludoBotDifficulty === 'hard'
+                          ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 ring-1 ring-rose-400'
+                          : 'text-slate-400 hover:text-rose-300 hover:bg-slate-900'
+                      }`}
+                      title="Hard: Ruthless Grandmaster bots with aggressive captures"
+                    >
+                      <span className="text-[11px]">🔴 Hard</span>
+                      <span className="text-[9px] font-mono opacity-80">Ruthless</span>
+                    </button>
+                  </div>
+
+                  {/* Playstyle Description */}
+                  <p className="text-[11px] leading-tight">
+                    {ludoBotDifficulty === 'easy' && (
+                      <span className="text-emerald-400/90 font-medium">
+                        ✨ Casual play: Forgiving bot decisions, relaxed captures, and unhurried home advances.
+                      </span>
+                    )}
+                    {ludoBotDifficulty === 'medium' && (
+                      <span className="text-amber-400/90 font-medium">
+                        ⚔️ Tactical play: Balanced safe cell awareness, opportunistic strikes, and smart positioning.
+                      </span>
+                    )}
+                    {ludoBotDifficulty === 'hard' && (
+                      <span className="text-rose-400/90 font-medium">
+                        🔥 Ruthless play: Relentless capture hunting, aggressive star cell blockades, and 0 blunders.
+                      </span>
+                    )}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => handleStartNewGame('offline_bot')}
+                    className="w-full py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3 text-slate-400" />
+                    <span>Restart Match with {ludoBotDifficulty.toUpperCase()}</span>
+                  </button>
+                </div>
+              )}
+
               {/* Game Session Info Card */}
               <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-xl">
                 <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
@@ -1214,7 +1355,7 @@ export default function App() {
                     <span className="text-slate-400">Mode</span>
                     <span className="font-semibold text-blue-400">
                       {activeTab === 'offline_bot'
-                        ? 'VS AI Adaptive'
+                        ? `VS AI (${ludoBotDifficulty.toUpperCase()})`
                         : activeTab === 'local_pass'
                         ? 'Local Pass & Play'
                         : 'Ranked Online'}
@@ -1234,8 +1375,16 @@ export default function App() {
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-400">Difficulty</span>
-                    <span className="px-2 py-0.5 rounded bg-rose-950/60 border border-rose-800/50 text-rose-400 text-[10px] font-extrabold uppercase">
-                      ADAPTIVE
+                    <span
+                      className={`px-2 py-0.5 rounded border text-[10px] font-extrabold uppercase ${
+                        ludoBotDifficulty === 'easy'
+                          ? 'bg-emerald-950/60 border-emerald-800/50 text-emerald-400'
+                          : ludoBotDifficulty === 'hard'
+                          ? 'bg-rose-950/60 border-rose-800/50 text-rose-400'
+                          : 'bg-amber-950/60 border-amber-800/50 text-amber-400'
+                      }`}
+                    >
+                      {activeTab === 'offline_bot' ? ludoBotDifficulty.toUpperCase() : 'ADAPTIVE'}
                     </span>
                   </div>
                 </div>
@@ -1446,10 +1595,12 @@ export default function App() {
       />
 
       {/* Interactive Testing & Diagnostic Center */}
-      <TestingSuiteModal
-        isOpen={showTestingModal}
-        onClose={() => setShowTestingModal(false)}
-      />
+      {showTestingModal && (
+        <TestingSuiteModal
+          isOpen={showTestingModal}
+          onClose={() => setShowTestingModal(false)}
+        />
+      )}
 
       {/* Interactive Game Demo & Rules Guide Modal */}
       <GameDemoGuideModal

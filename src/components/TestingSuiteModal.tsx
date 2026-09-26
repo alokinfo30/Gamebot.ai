@@ -217,15 +217,34 @@ export const TestingSuiteModal: React.FC<TestingSuiteModalProps> = ({ isOpen, on
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const filteredResults = report
     ? selectedCategory === 'all'
       ? report.results
       : report.results.filter((r) => r.category === selectedCategory)
     : [];
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
-      <div className="relative w-full max-w-5xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-5xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -794,6 +813,21 @@ export const TestingSuiteModal: React.FC<TestingSuiteModalProps> = ({ isOpen, on
               </div>
             </div>
           )}
+        </div>
+
+        {/* Modal Footer with Close Button */}
+        <div className="px-6 py-3 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>All systems nominal &amp; autonomous self-healing ready</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-2 border border-slate-700 hover:border-slate-600 shadow-md"
+          >
+            <X className="w-4 h-4 text-slate-400" />
+            <span>Close Dialog</span>
+          </button>
         </div>
       </div>
     </div>

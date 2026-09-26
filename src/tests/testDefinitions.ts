@@ -194,6 +194,44 @@ export function initializeAllTestCases() {
     expect(typeof decision?.tokenId).toBe('number');
   });
 
+  registerTest('ELO & AI Engine', 'Bot Difficulty Multi-Level Heuristic Validation (Easy, Medium, Hard)', () => {
+    const state = createInitialGameState('offline_bot', 'red', 'hard');
+    const greenBot = state.players[1];
+    greenBot.botDifficulty = 'hard';
+
+    // Simulate scenario with multiple valid moves:
+    // Move A: Token 0 advances casually to step 10
+    // Move B: Token 1 scores directly into Home (targetStep: 58)
+    greenBot.tokens[0].step = 6;
+    greenBot.tokens[0].isBase = false;
+    greenBot.tokens[1].step = 54;
+    greenBot.tokens[1].isBase = false;
+
+    state.validMoves = [
+      { tokenId: 0, targetStep: 10 },
+      { tokenId: 1, targetStep: 58 },
+    ];
+    state.diceValue = 4;
+
+    // Hard bot must select winning move into Home
+    const hardDecision = selectBotMove(greenBot, state, 4);
+    expect(hardDecision).toBeTruthy();
+    expect(hardDecision?.tokenId).toBe(1);
+    expect(hardDecision?.targetStep).toBe(58);
+
+    // Test Easy bot returns valid decision without throwing
+    greenBot.botDifficulty = 'easy';
+    const easyDecision = selectBotMove(greenBot, state, 4);
+    expect(easyDecision).toBeTruthy();
+    expect([0, 1]).toContain(easyDecision?.tokenId);
+
+    // Test Medium bot returns valid decision
+    greenBot.botDifficulty = 'medium';
+    const medDecision = selectBotMove(greenBot, state, 4);
+    expect(medDecision).toBeTruthy();
+    expect([0, 1]).toContain(medDecision?.tokenId);
+  });
+
   // ==========================================
   // CATEGORY 4: MULTILINGUAL I18N DICTIONARY TESTS
   // ==========================================

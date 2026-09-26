@@ -40,10 +40,28 @@ self.addEventListener('activate', (event) => {
 // 3. Service Worker Fetch Strategy
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  const url = new URL(req.url);
+  let url;
+  try {
+    url = new URL(req.url);
+  } catch (e) {
+    return;
+  }
 
-  // Skip non-GET requests or WebSocket connections
-  if (req.method !== 'GET' || url.protocol.startsWith('ws')) {
+  // Strictly only handle http and https requests.
+  // The Cache Storage API throws TypeError on chrome-extension:, moz-extension:, file:, etc.
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return;
+  }
+
+  // Skip non-GET requests or WebSocket connections or Vite dev files
+  if (
+    req.method !== 'GET' ||
+    url.protocol.startsWith('ws') ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.includes('vite') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.searchParams.has('t')
+  ) {
     return;
   }
 
@@ -53,8 +71,14 @@ self.addEventListener('fetch', (event) => {
       fetch(req)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(req, responseClone));
+            try {
+              const responseClone = networkResponse.clone();
+              caches.open(DYNAMIC_CACHE).then((cache) => {
+                cache.put(req, responseClone).catch(() => {/* Ignore cache put failures */});
+              });
+            } catch (e) {
+              /* Ignore clone/cache errors */
+            }
           }
           return networkResponse;
         })
@@ -88,7 +112,14 @@ self.addEventListener('fetch', (event) => {
         fetch(req)
           .then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
-              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(req, networkResponse));
+              try {
+                const responseClone = networkResponse.clone();
+                caches.open(DYNAMIC_CACHE).then((cache) => {
+                  cache.put(req, responseClone).catch(() => {/* Ignore cache errors */});
+                });
+              } catch (e) {
+                /* Ignore clone errors */
+              }
             }
           })
           .catch(() => {/* Silent catch offline */});
@@ -99,8 +130,14 @@ self.addEventListener('fetch', (event) => {
       return fetch(req)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(req, responseClone));
+            try {
+              const responseClone = networkResponse.clone();
+              caches.open(DYNAMIC_CACHE).then((cache) => {
+                cache.put(req, responseClone).catch(() => {/* Ignore cache errors */});
+              });
+            } catch (e) {
+              /* Ignore clone errors */
+            }
           }
           return networkResponse;
         })

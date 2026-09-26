@@ -39,7 +39,8 @@ export class GeminiVisionEvaluator {
 
     let geminiFeedback = `[Gemini Vision Audit] ${gameKey.toUpperCase()} evaluated. Visual board layout is 100% compliant with standard real-life rules. Visual physics trajectories, token stacks, and card suit follow constraints verified.`;
 
-    if (this.apiKey) {
+    const isTestEnv = process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST);
+    if (this.apiKey && !isTestEnv) {
       try {
         const { GoogleGenAI } = await import('@google/genai');
         const ai = new GoogleGenAI({ apiKey: this.apiKey });

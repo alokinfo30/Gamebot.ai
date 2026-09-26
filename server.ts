@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
@@ -16,11 +17,13 @@ app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: https://cdn.jsdelivr.net https://aistudio.google.com; " +
+      "script-src-elem 'self' 'unsafe-inline' blob: data: https://cdn.jsdelivr.net https://aistudio.google.com; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "font-src 'self' https://fonts.gstatic.com data:; " +
       "img-src 'self' data: blob: https://images.unsplash.com https://*.run.app; " +
-      "connect-src 'self' https: wss:; " +
+      "connect-src 'self' http: https: ws: wss:; " +
+      "worker-src 'self' blob: data: https://aistudio.google.com; " +
       "frame-ancestors 'self' https:; " +
       "object-src 'none'; " +
       "base-uri 'self';"
@@ -505,9 +508,15 @@ app.post('/api/rooms/:code/sync', (req, res) => {
 });
 
 async function startServer() {
+  const httpServer = http.createServer(app);
+
   if (process.env.NODE_ENV !== 'production') {
+    const isHmrDisabled = process.env.DISABLE_HMR === 'true';
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: isHmrDisabled ? false : { server: httpServer },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -519,7 +528,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`AI Ludo Master server running on http://localhost:${PORT}`);
   });
 }

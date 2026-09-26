@@ -32,7 +32,8 @@ export class SelfHealingPipeline {
     let patchApplied = false;
     let patchedCodeSnippet: string | undefined = undefined;
 
-    if (this.apiKey && existingCode) {
+    const isTestEnv = process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST);
+    if (this.apiKey && existingCode && !isTestEnv) {
       try {
         const { GoogleGenAI } = await import('@google/genai');
         const ai = new GoogleGenAI({ apiKey: this.apiKey });

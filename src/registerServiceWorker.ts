@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * Service Worker Registration and Offline State Manager
  */
@@ -27,7 +28,11 @@ class ServiceWorkerManager {
 
   public register() {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-      console.log('[SW Manager] Service Workers not supported in this environment.');
+      return;
+    }
+
+    // In local development or Vite dev server, bypass service worker to avoid caching dev modules
+    if (import.meta.env.DEV) {
       return;
     }
 

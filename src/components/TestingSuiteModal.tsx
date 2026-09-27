@@ -221,6 +221,8 @@ export const TestingSuiteModal: React.FC<TestingSuiteModalProps> = ({ isOpen, on
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
         onClose();
       }
     };
@@ -238,15 +240,19 @@ export const TestingSuiteModal: React.FC<TestingSuiteModalProps> = ({ isOpen, on
 
   return (
     <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-3 sm:p-6 overflow-y-auto"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-5xl rounded-2xl bg-slate-900 border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/90 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
               <Zap className="w-5 h-5 animate-pulse" />
@@ -264,8 +270,9 @@ export const TestingSuiteModal: React.FC<TestingSuiteModalProps> = ({ isOpen, on
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
+              type="button"
               onClick={runAllTests}
               disabled={isRunning}
               className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-blue-600/20 transition-all disabled:opacity-50 cursor-pointer"
@@ -283,11 +290,33 @@ export const TestingSuiteModal: React.FC<TestingSuiteModalProps> = ({ isOpen, on
               )}
             </button>
 
+            {/* Quick Header Close Button */}
             <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              className="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-3.5 h-3.5" />
+              <span>Close</span>
+            </button>
+
+            {/* Icon Close Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }}
+              title="Close Dialog (ESC)"
+              aria-label="Close"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5 stroke-[2.5]" />
             </button>
           </div>
         </div>
@@ -816,17 +845,22 @@ export const TestingSuiteModal: React.FC<TestingSuiteModalProps> = ({ isOpen, on
         </div>
 
         {/* Modal Footer with Close Button */}
-        <div className="px-6 py-3 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between">
+        <div className="px-6 py-3.5 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>All systems nominal &amp; autonomous self-healing ready</span>
           </div>
           <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-2 border border-slate-700 hover:border-slate-600 shadow-md"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-2 border border-rose-500/50 shadow-lg shadow-rose-600/25 active:scale-95"
           >
-            <X className="w-4 h-4 text-slate-400" />
-            <span>Close Dialog</span>
+            <X className="w-4 h-4 text-white" />
+            <span>Close QA Dialog</span>
           </button>
         </div>
       </div>

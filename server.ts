@@ -529,7 +529,7 @@ async function startServer() {
   }
 
   httpServer.listen(PORT, '0.0.0.0', () => {
-    console.log(`AI Ludo Master server running on http://localhost:${PORT}`);
+    console.log(`GAMEBOT.AI server running on http://localhost:${PORT}`);
   });
 }
 

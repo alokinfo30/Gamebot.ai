@@ -384,13 +384,17 @@ export default function App() {
 
   // Reset turn timer when turn color, turn count, or hasRolled changes
   useEffect(() => {
-    if (gameState.status !== 'playing') return;
+    if (activeGameSuiteTab !== 'ludo' || gameState.status !== 'playing') return;
     setTurnSecondsLeft(TURN_TIMEOUT_SECONDS);
-  }, [gameState.currentTurnColor, gameState.turnCount, gameState.hasRolled, gameState.status]);
+  }, [activeGameSuiteTab, gameState.currentTurnColor, gameState.turnCount, gameState.hasRolled, gameState.status]);
 
   // Turn countdown interval
   useEffect(() => {
-    if (gameState.status !== 'playing') return;
+    if (activeGameSuiteTab !== 'ludo' || gameState.status !== 'playing') return;
+    // Do not countdown or auto-expire on initial idle turn 1 before human player has made their first move
+    if (gameState.turnCount === 1 && !gameState.hasRolled && currentTurnPlayer?.type === 'human') {
+      return;
+    }
 
     const timer = setInterval(() => {
       setTurnSecondsLeft((prev) => {
@@ -405,7 +409,7 @@ export default function App() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameState.status, isMuted]);
+  }, [activeGameSuiteTab, gameState.status, gameState.turnCount, gameState.hasRolled, currentTurnPlayer?.type, isMuted]);
 
   // AI Bot Difficulty Selection Handler
   const handleSelectLudoDifficulty = useCallback((difficulty: 'easy' | 'medium' | 'hard') => {
@@ -722,7 +726,7 @@ export default function App() {
 
   // AI Bot Automated Turn Effect
   useEffect(() => {
-    if (gameState.status !== 'playing') return;
+    if (activeGameSuiteTab !== 'ludo' || gameState.status !== 'playing') return;
 
     if (currentTurnPlayer && currentTurnPlayer.type === 'bot') {
       if (isProcessingTurn.current) return;
@@ -774,11 +778,15 @@ export default function App() {
     } else {
       isProcessingTurn.current = false;
     }
-  }, [gameState, currentTurnPlayer, handleExecuteMove]);
+  }, [activeGameSuiteTab, gameState, currentTurnPlayer, handleExecuteMove]);
 
   // Turn Timeout Auto-Action
   useEffect(() => {
-    if (turnSecondsLeft === 0 && gameState.status === 'playing') {
+    if (activeGameSuiteTab !== 'ludo' || gameState.status !== 'playing') return;
+    // Do not auto-timeout before human makes their initial roll
+    if (gameState.turnCount === 1 && !gameState.hasRolled && currentTurnPlayer?.type === 'human') return;
+
+    if (turnSecondsLeft === 0) {
       const currentTurn = gameState.players.find((p) => p.color === gameState.currentTurnColor);
       if (!gameState.hasRolled) {
         handleRollDice();
@@ -801,7 +809,7 @@ export default function App() {
         }
       }
     }
-  }, [turnSecondsLeft, gameState, handleRollDice, handleExecuteMove]);
+  }, [activeGameSuiteTab, turnSecondsLeft, gameState, currentTurnPlayer?.type, handleRollDice, handleExecuteMove]);
 
   // Handle Gesture Trigger Actions
   const handleGestureAction = useCallback((gesture: GestureType) => {
@@ -1603,12 +1611,14 @@ export default function App() {
       )}
 
       {/* Interactive Game Demo & Rules Guide Modal */}
-      <GameDemoGuideModal
-        isOpen={showDemoGuideModal}
-        gameKey={activeGameSuiteTab === 'home' ? lastPlayedGameKey : (activeGameSuiteTab as GameKey)}
-        language={language}
-        onClose={() => setShowDemoGuideModal(false)}
-      />
+      {showDemoGuideModal && !showTestingModal && (
+        <GameDemoGuideModal
+          isOpen={showDemoGuideModal}
+          gameKey={activeGameSuiteTab === 'home' ? lastPlayedGameKey : (activeGameSuiteTab as GameKey)}
+          language={language}
+          onClose={() => setShowDemoGuideModal(false)}
+        />
+      )}
 
       {/* SEO & GEO Knowledge Hub for Search Engines and AI LLMs */}
       <SeoKnowledgeGuide language={language} />
